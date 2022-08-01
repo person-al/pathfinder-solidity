@@ -1,3 +1,9 @@
+# THIS README IS A WORK IN PROGRESS
+
+Below you'll see a copy of the Hardhat Template README. If you're looking for a Solidity beginner's template, I recommend [checking it out](https://github.com/paulrberg/hardhat-template).
+
+I am working on a more descriptive readme of this project, stay tuned.
+
 # Hardhat Template [![Github Actions][gha-badge]][gha] [![Hardhat][hardhat-badge]][hardhat] [![License: MIT][license-badge]][license]
 
 [gha]: https://github.com/paulrberg/hardhat-template/actions

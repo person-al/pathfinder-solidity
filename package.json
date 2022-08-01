@@ -33,6 +33,7 @@
     "cross-env": "^7.0.3",
     "cz-conventional-changelog": "^3.3.0",
     "dotenv": "^16.0.1",
+    "erc721a": "^4.2.0",
     "eslint": "^8.20.0",
     "eslint-config-prettier": "^8.5.0",
     "ethers": "^5.6.9",
@@ -89,5 +90,8 @@
     "prettier:check": "prettier --check --config ./.prettierrc.yml \"**/*.{js,json,md,sol,ts,yml}\"",
     "test": "hardhat test",
     "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.7.2"
   }
 }

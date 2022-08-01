@@ -3,10 +3,10 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signe
 import { ethers } from "hardhat";
 
 import type { Signers } from "../types";
-import { shouldBehaveLikeGreeter } from "./Greeter.behavior";
-import { deployGreeterFixture } from "./Greeter.fixture";
+import { shouldBehaveLikePoem } from "./PoemStructs.behavior";
+import { deployPoemFixture } from "./PoemStructs.fixture";
 
-describe("Unit tests", function () {
+describe("PoemStructs", function () {
   before(async function () {
     this.signers = {} as Signers;
 
@@ -16,12 +16,10 @@ describe("Unit tests", function () {
     this.loadFixture = loadFixture;
   });
 
-  describe("Greeter", function () {
-    beforeEach(async function () {
-      const { greeter } = await this.loadFixture(deployGreeterFixture);
-      this.greeter = greeter;
-    });
-
-    shouldBehaveLikeGreeter();
+  beforeEach(async function () {
+    const { poem } = await this.loadFixture(deployPoemFixture);
+    this.poem = poem;
   });
+
+  shouldBehaveLikePoem();
 });
