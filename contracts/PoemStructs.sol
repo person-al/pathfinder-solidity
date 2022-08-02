@@ -3,19 +3,18 @@ pragma solidity >=0.8.4;
 
 import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
-// import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/access/Ownable.sol";
 
 error PoemStructsError();
 
-contract PoemStructs is ERC721A("PoemStruct", "STPOEM") {
+contract PoemStructs is ERC721A("PoemStruct", "STPOEM"), Ownable {
     struct Node {
         uint8 leftChild;
         uint8 rightChild;
-        bytes28 value;
-        uint8[] siblings;
+        bytes26 value;
+        uint8[4] siblings;
     }
-    Node[] private nodesList;
-    mapping(uint8 => uint8) private nodesMap;
+    Node[26] private nodesList;
     uint8 public constant MAX_NUM_SIBLINGS = 4;
     uint8 public constant MAX_LEN_VALUE = 28;
     uint8 public constant MAX_INDEX_VAL = 25;
@@ -43,7 +42,7 @@ contract PoemStructs is ERC721A("PoemStruct", "STPOEM") {
         uint8 leftIndex,
         uint8 rightIndex,
         uint8[] calldata siblingIndices
-    ) external {
+    ) external onlyOwner {
         // All the requires
         require(_totalMinted() == 0, "Owner cannot modify graph after minting has begun");
         require(nodesList.length <= MAX_INDEX_VAL + 1, "Cannot support more than 25 nodes.");
@@ -51,31 +50,22 @@ contract PoemStructs is ERC721A("PoemStruct", "STPOEM") {
         require(leftIndex <= MAX_INDEX_VAL && rightIndex <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
         require(bytes(value).length <= MAX_LEN_VALUE, "Value can't be more than 28 characters/bytes");
         require(siblingIndices.length <= MAX_NUM_SIBLINGS, "Can't support more than 4 siblings.");
+        // TODO: feedback from CryptoDevs: I can store siblings in a uint8[2] instead of a general list
+        uint8[4] memory siblings;
         for (uint256 i = 0; i < siblingIndices.length; i++) {
             uint8 sibIndex = siblingIndices[i];
             indexIsValid(sibIndex);
             require(sibIndex != index, "A node cannot be its own sibling.");
-        }
-
-        if (nodesList.length == 0) {
-            // We want 0 to mean nothing,
-            //      so put something null at the 0 index
-            nodesList.push(Node(0, 0, "", new uint8[](0)));
+            siblings[i] = sibIndex;
         }
 
         // Now store it
-        Node memory node = Node(leftIndex, rightIndex, bytes28(bytes(value)), siblingIndices);
-        uint8 nodesListIndex = uint8(nodesList.length);
-        nodesList.push(node);
-        nodesMap[index] = nodesListIndex;
+        nodesList[index] = Node(leftIndex, rightIndex, bytes26(bytes(value)), siblings);
     }
 
     function getNode(uint8 index) public view returns (Node memory) {
-        require(nodesList.length > 0, "No nodes stored yet.");
         indexIsValid(index);
-        uint8 nodeIndex = nodesMap[index];
-        require(nodeIndex != 0, "This node does not exist yet.");
-        return nodesList[nodeIndex];
+        return nodesList[index];
     }
 
     /**

@@ -3,11 +3,12 @@ import { expect } from "chai";
 import type { PoemStructs } from "../../src/types/contracts/PoemStructs";
 
 export function shouldBehaveLikePoem(): void {
-  it("throws require when getting a Node that doesn't exist", async function () {
-    await expect(this.poem.connect(this.signers.admin).getNode(1)).to.be.revertedWith("No nodes stored yet.");
-
-    await this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, []);
-    await expect(this.poem.connect(this.signers.admin).getNode(2)).to.be.revertedWith("This node does not exist yet.");
+  it("returns 0s for all get functions if deployed with no changes", async function () {
+    const node: PoemStructs.NodeStruct = await this.poem.connect(this.signers.admin).getNode(1);
+    expect(node.leftChild).to.equal(0);
+    expect(node.rightChild).to.equal(0);
+    expect(node.value).to.equal("0x0000000000000000000000000000000000000000000000000000");
+    expect(node.siblings).deep.equal([0, 0, 0, 0]);
   });
 
   it("errors out if packed with invalid index", async function () {
@@ -83,8 +84,8 @@ export function shouldBehaveLikePoem(): void {
     const node: PoemStructs.NodeStruct = await this.poem.connect(this.signers.admin).getNode(1);
     expect(node.leftChild).to.equal(2);
     expect(node.rightChild).to.equal(3);
-    expect(node.siblings).deep.equal([]);
-    expect(node.value).to.equal("0x68656c6c6f0000000000000000000000000000000000000000000000");
+    expect(node.siblings).deep.equal([0, 0, 0, 0]);
+    expect(node.value).to.equal("0x68656c6c6f000000000000000000000000000000000000000000");
   });
 
   it("can pack a small diamond", async function () {
