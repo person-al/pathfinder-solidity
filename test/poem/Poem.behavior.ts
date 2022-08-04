@@ -1,124 +1,116 @@
 import { expect } from "chai";
 
 export function shouldBehaveLikePoem(): void {
-  it("throws require when getting a Node that doesn't exist", async function () {
-    await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-    await expect(this.poem.connect(this.signers.admin).getRightChild(0)).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-    await expect(this.poem.connect(this.signers.admin).getValueBytes(0)).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-    await expect(this.poem.connect(this.signers.admin).getSiblings(0)).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-  });
+  describe("Minting Requirements", function () {
+    it("doesn't allow minting if you've done so before", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      await expect(this.poem.connect(this.signers.admin).mint()).to.be.revertedWith("You can only mint 1 token.");
+    });
 
-  it("returns 0s for all get functions if deployed with no changes", async function () {
-    expect(await this.poem.connect(this.signers.admin).getLeftChild(1)).to.equal(0);
-    expect(await this.poem.connect(this.signers.admin).getRightChild(1)).to.equal(0);
-    expect(await this.poem.connect(this.signers.admin).getValueBytes(1)).to.equal(
-      "0x0000000000000000000000000000000000000000000000000000000000000000",
-    );
-    expect(await this.poem.connect(this.signers.admin).getSiblings(1)).deep.equal([0, 0, 0, 0]);
-  });
-
-  it("errors out if packed with invalid index", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [])).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-
-    await expect(this.poem.connect(this.signers.admin).packNode(26, "hello", 2, 3, [])).to.be.revertedWith(
-      "Cannot support more than 25 nodes.",
-    );
-  });
-
-  it("supports 0-index for left and right children", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 0, 3, [])).not.to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 3, 0, [])).not.to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
-  });
-
-  it("errors out if packed with invalid left child index", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 26, 3, [])).to.be.revertedWith(
-      "Cannot support more than 25 nodes.",
-    );
-  });
-
-  it("errors out if packed with invalid right child index", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 26, [])).to.be.revertedWith(
-      "Cannot support more than 25 nodes.",
-    );
-  });
-
-  it("errors out if packed with too long a value", async function () {
-    await expect(
+    it("doesn't allow minting if you already hold three token", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
+      await this.poem.connect(this.signers.others[0]).mint();
       this.poem
-        .connect(this.signers.admin)
-        .packNode(
-          1,
-          "It was a sore point with everyone. Thousands of years ago, men had spread out from Earth—first to the planets, then to the nearer stars, crawling in ships that could travel no faster than the speed of light. They had even believed that was an absolute limit—that nothing in the universe could exceed the speed of light. It took years to go from Earth to the nearest star.",
-          2,
-          3,
-          [],
-        ),
-    ).to.be.revertedWith("Value can't be more than 26 characters/bytes");
+        .connect(this.signers.others[0])
+        .transferFrom(this.signers.others[0].address, this.signers.user.address, 1);
+      await this.poem.connect(this.signers.others[1]).mint();
+      this.poem
+        .connect(this.signers.others[1])
+        .transferFrom(this.signers.others[1].address, this.signers.user.address, 2);
+
+      await expect(this.poem.connect(this.signers.user).mint()).to.be.revertedWith(
+        "One can hold max 3 tokens at a time.",
+      );
+    });
+
+    it("doesn't allow minting if it's out of tokens", async function () {
+      const maxNum = await this.poem.connect(this.signers.admin).MAX_NUM_NFTS();
+      for (let i = 0; i < maxNum; i++) {
+        await this.poem.connect(this.signers.others[i]).mint();
+      }
+      await expect(this.poem.connect(this.signers.user).mint()).to.be.revertedWith("Out of tokens.");
+    });
+
+    it("allows minting if all conditions are met", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
+    });
+
+    it("on mint, update pseudoRandomNumber", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).getPsuedoRandomNumber()).to.not.equal(1);
+    });
+
+    it("on mint, update ownership", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.admin.address)).to.equal(1);
+      await this.poem.connect(this.signers.user).mint();
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.user.address)).to.equal(2);
+    });
   });
 
-  it("errors out if packed with invalid sibling index", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 0])).to.be.revertedWith(
-      "Use a positive, non-zero index for your nodes.",
-    );
+  describe("Pseudorandom number adjuster", function () {});
 
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 26])).to.be.revertedWith(
-      "Cannot support more than 25 nodes.",
-    );
+  describe("Transfer requirements", function () {
+    it("on transfer, update pseudoRandomNumber", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).getPsuedoRandomNumber()).to.not.equal(1);
+    });
 
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [1, 5])).to.be.revertedWith(
-      "A node cannot be its own sibling.",
-    );
+    it("on transfer, update transfer timestamp", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.admin.address)).to.equal(1);
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.user.address)).to.equal(0);
+
+      this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.admin.address)).to.equal(1);
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.user.address)).to.equal(2);
+    });
   });
 
-  it("errors out if packed with too many siblings", async function () {
-    await expect(this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 6, 7, 8, 9])).to.be.revertedWith(
-      "Can't support more than 4 siblings.",
-    );
+  describe("Burn requirements", function () {
+    it("on burn, update ownership", async function () {
+      // await this.poem.connect(this.signers.admin).mint();
+      // await this.poem.connect(this.signers.admin).burn(0);
+    });
+
+    it("on burn, update pseudoRandomNumber", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      const num = await this.poem.connect(this.signers.admin).getPsuedoRandomNumber();
+      expect(num).to.not.equal(1);
+      await this.poem.connect(this.signers.admin).burn(0);
+      expect(await this.poem.connect(this.signers.admin).getPsuedoRandomNumber()).to.not.equal(num);
+    });
+
+    it("on burn, DO NOT update transfer timestamp", async function () {
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.admin.address)).to.equal(1);
+      await this.poem.connect(this.signers.admin).burn(0);
+      expect(await this.poem.connect(this.signers.admin).getAux(this.signers.admin.address)).to.equal(1);
+      expect(await this.poem.connect(this.signers.admin).getAux(0)).to.equal(0);
+    });
   });
 
-  it("errors if Owner tries to modify graph after minting has begun");
-
-  it("can pack and unpack a node successfully", async function () {
-    await this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 6]);
-    expect(await this.poem.connect(this.signers.admin).getLeftChild(1)).to.equal(2);
-    expect(await this.poem.connect(this.signers.admin).getRightChild(1)).to.equal(3);
-    expect(await this.poem.connect(this.signers.admin).getValueBytes(1)).to.equal(
-      "0x00000000000000000000000000000000000000000000000000000068656c6c6f",
-    );
-    expect(await this.poem.connect(this.signers.admin).getSiblings(1)).deep.equal([0, 0, 6, 5]);
-  });
-
-  it("can pack a small diamond", async function () {
-    await this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, []);
-    await this.poem.connect(this.signers.admin).packNode(2, "hello", 4, 5, [3]);
-    await this.poem.connect(this.signers.admin).packNode(3, "hello", 5, 6, [2]);
-    await this.poem.connect(this.signers.admin).packNode(4, "hello", 7, 8, [5, 6]);
-    await this.poem.connect(this.signers.admin).packNode(5, "hello", 8, 9, [4, 6]);
-    await this.poem.connect(this.signers.admin).packNode(6, "hello", 9, 10, [5, 4]);
-    await this.poem.connect(this.signers.admin).packNode(7, "hello", 0, 11, [8, 9, 10]);
-    await this.poem.connect(this.signers.admin).packNode(8, "hello", 11, 12, [7, 9, 10]);
-    await this.poem.connect(this.signers.admin).packNode(9, "hello", 12, 13, [7, 8, 10]);
-    await this.poem.connect(this.signers.admin).packNode(10, "hello", 13, 0, [7, 8, 9]);
-    await this.poem.connect(this.signers.admin).packNode(11, "hello", 0, 14, [12, 13]);
-    await this.poem.connect(this.signers.admin).packNode(12, "hello", 14, 15, [11, 13]);
-    await this.poem.connect(this.signers.admin).packNode(13, "hello", 15, 0, [11, 12]);
-    await this.poem.connect(this.signers.admin).packNode(14, "hello", 0, 16, [15]);
-    await this.poem.connect(this.signers.admin).packNode(15, "hello", 16, 0, [14]);
-    await this.poem.connect(this.signers.admin).packNode(16, "hello", 0, 0, []);
-  });
+  it("after token transfer (not burn), it updates pseudoRandomNumber and transfer timestamp and ownership update");
+  it("transferring multiple times properly updates owner count");
+  it("transferring multiple times properly updates block timestamp");
+  it("opacityLevel can handle an extremely large numBlocksHeld");
+  it("opacityLevel returns the correct value for all levels");
+  it("jitterLevel can handle extremely large numOwners");
+  it("jitterLevel properly accounts for the number of owners");
+  it("jitterLevel properly accounts for currStep");
+  it("getCurrIndex works when currIndex is non-0");
+  it("getCurrIndex works when currIndex is 0 and last step is 1 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 2 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 3 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 4 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 5 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 6 away");
+  it("getCurrIndex works when currIndex is 0 and last step is 7 away");
+  it("takeNextStep");
+  it("burn");
+  it("calculate distribution of pseudoRandomNumber");
+  it("calculate distribution of getCurrIndex");
+  it("calculate distribution of takeNextStep");
 }

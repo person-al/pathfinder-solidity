@@ -2,16 +2,19 @@ import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
 import { ethers } from "hardhat";
 
+import { shouldBehaveLikePoem } from "../poem/Poem.behavior";
 import type { Signers } from "../types";
-import { shouldBehaveLikePoem } from "./Poem.behavior";
-import { deployPoemFixture } from "./Poem.fixture";
+import { shouldBehaveLikePoemPacked } from "./PoemPacked.behavior";
+import { deployPoemFixture } from "./PoemPacked.fixture";
 
-describe("Poem", function () {
+describe("PoemPacked", function () {
   before(async function () {
     this.signers = {} as Signers;
 
     const signers: SignerWithAddress[] = await ethers.getSigners();
     this.signers.admin = signers[0];
+    this.signers.user = signers[1];
+    this.signers.others = signers.slice(2, -1);
 
     this.loadFixture = loadFixture;
   });
@@ -21,5 +24,6 @@ describe("Poem", function () {
     this.poem = poem;
   });
 
+  shouldBehaveLikePoemPacked();
   shouldBehaveLikePoem();
 });
