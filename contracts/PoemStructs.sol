@@ -2,9 +2,9 @@
 pragma solidity >=0.8.4;
 
 import "hardhat/console.sol";
-import "./Poem.sol";
+import "./TestablePoem.sol";
 
-contract PoemStructs is Poem("PoemStructs", "STPOEM") {
+contract PoemStructs is TestablePoem("PoemStructs", "STPOEM") {
     struct Node {
         uint8 leftChild;
         uint8 rightChild;
@@ -89,15 +89,15 @@ contract PoemStructs is Poem("PoemStructs", "STPOEM") {
         return nodesList[index];
     }
 
-    function getLeftChild(uint8 index) public view override returns (uint8) {
+    function _getLeftChild(uint8 index) internal view override returns (uint8) {
         return getNode(index).leftChild;
     }
 
-    function getRightChild(uint8 index) public view override returns (uint8) {
+    function _getRightChild(uint8 index) internal view override returns (uint8) {
         return getNode(index).rightChild;
     }
 
-    function getJitterChild(uint8 index, uint8 sibIndex) public view override returns (uint8) {
+    function _getJitterChild(uint8 index, uint8 sibIndex) internal view override returns (uint8) {
         return getNode(index).siblings[sibIndex];
     }
 }

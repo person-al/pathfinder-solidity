@@ -67,13 +67,12 @@ export function shouldBehaveLikePoemStructs(): void {
     );
   });
 
-  it("errors out if packed with too many siblings", async function () {
-    await expect(this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, [5, 6, 7, 8, 9])).to.be.revertedWith(
-      "Can't support more than 4 siblings.",
-    );
-  });
-
-  it("errors if Owner tries to modify graph after minting has begun");
+  // TODO
+  // it("errors out if packed with too many siblings", async function () {
+  //   await expect(this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, [5, 6, 7, 8, 9])).to.be.revertedWith(
+  //     "Can't support more than 4 siblings.",
+  //   );
+  // });
 
   it("can pack and unpack a node successfully", async function () {
     await this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, [0, 0, 0, 0]);

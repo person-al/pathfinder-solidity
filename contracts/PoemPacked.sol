@@ -2,9 +2,9 @@
 pragma solidity >=0.8.4;
 
 import "hardhat/console.sol";
-import "./Poem.sol";
+import "./TestablePoem.sol";
 
-contract PoemPacked is Poem("Poem", "POEM") {
+contract PoemPacked is TestablePoem("Poem", "POEM") {
     bytes32[26] private nodes;
     uint16 public constant TOTAL_NUM_BITS = 256;
     uint8 public constant BITS_IN_BYTES = 8;
@@ -96,17 +96,17 @@ contract PoemPacked is Poem("Poem", "POEM") {
         return number;
     }
 
-    function getLeftChild(uint8 index) public view override returns (uint8) {
+    function _getLeftChild(uint8 index) internal view override returns (uint8) {
         indexIsValid(index);
         return uint8(nodes[index][0]);
     }
 
-    function getRightChild(uint8 index) public view override returns (uint8) {
+    function _getRightChild(uint8 index) internal view override returns (uint8) {
         indexIsValid(index);
         return uint8(nodes[index][1]);
     }
 
-    function getJitterChild(uint8 index, uint8 sibIndex) public view override returns (uint8) {
+    function _getJitterChild(uint8 index, uint8 sibIndex) internal view override returns (uint8) {
         return getSiblings(index)[sibIndex];
     }
 
