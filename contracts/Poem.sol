@@ -13,7 +13,7 @@ abstract contract Poem is ERC721A, Ownable {
 
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
-    uint256 immutable _deployedBlockNumber;
+    uint256 private immutable _deployedBlockNumber;
     uint256 internal _historicalInput = 1;
 
     constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {

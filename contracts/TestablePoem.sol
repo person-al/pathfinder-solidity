@@ -23,15 +23,15 @@ abstract contract TestablePoem is Poem {
         return _newHistoricalInput(currRandomNumber, from, to, difficulty, blockNumber);
     }
 
-    function getLeftChild(uint8 index) public view returns (uint8){
+    function getLeftChild(uint8 index) public view returns (uint8) {
         return _getLeftChild(index);
     }
 
-    function getRightChild(uint8 index) public view returns (uint8){
+    function getRightChild(uint8 index) public view returns (uint8) {
         return _getRightChild(index);
     }
 
-    function getJitterChild(uint8 index, uint8 sibIndex) public view returns (uint8){
+    function getJitterChild(uint8 index, uint8 sibIndex) public view returns (uint8) {
         return _getJitterChild(index, sibIndex);
     }
 
@@ -39,7 +39,7 @@ abstract contract TestablePoem is Poem {
         return _getAux(owner);
     }
 
-    function numOwners(uint256 tokenId) public view onlyOwner returns(uint24) {
+    function numOwners(uint256 tokenId) public view onlyOwner returns (uint24) {
         TokenOwnership memory info = _ownershipOf(tokenId);
         return info.extraData;
     }
