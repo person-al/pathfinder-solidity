@@ -84,11 +84,6 @@ export function shouldBehaveLikePoemPacked(): void {
       );
     });
 
-    // TODO
-    // it("errors out if packed with too many siblings", async function () {
-    //   expect(await this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 6, 7, 8, 9])).to.be.reverted;
-    // });
-
     it("can pack and unpack a node successfully", async function () {
       await this.poem.connect(this.signers.admin).packNode(1, "hello", 2, 3, [5, 6, 0, 0]);
       expect(await this.poem.connect(this.signers.admin).getLeftChild(1)).to.equal(2);

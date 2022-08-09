@@ -10,37 +10,32 @@ contract PoemPacked is TestablePoem("Poem", "POEM") {
     uint8 public constant BITS_IN_BYTES = 8;
     uint256 private constant VALUE_FILTER = 0x000000ffffffffffffffffffffffffff;
 
-    function indexIsValid(uint256 _index) private pure {
-        require(_index > 0, "Use a positive, non-zero index for your nodes.");
-        require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
-    }
-
     function initialize() public override onlyOwner {
         packNode(1, "As he ", 2, 3, [0, 0, 0, 0]);
-        packNode(2, "reached ", 2, 3, [3, 0, 0, 0]);
-        packNode(3, "dropped ", 2, 3, [2, 0, 0, 0]);
-        packNode(4, "upwards ", 2, 3, [5, 6, 0, 0]);
-        packNode(5, "his hands ", 2, 3, [4, 6, 0, 0]);
-        packNode(6, "his eyes ", 2, 3, [4, 5, 0, 0]);
-        packNode(7, "joyously,", 2, 3, [8, 9, 10, 0]);
-        packNode(8, "to the clouds,", 2, 3, [7, 9, 10, 0]);
-        packNode(9, "shyly,", 2, 3, [7, 8, 10, 0]);
-        packNode(10, "towards his shoes,", 2, 3, [7, 8, 9, 0]);
-        packNode(11, "the sun ", 2, 3, [12, 13, 14, 15]);
-        packNode(12, "the wind ", 2, 3, [11, 13, 14, 15]);
-        packNode(13, "the footsteps", 2, 3, [11, 12, 14, 15]);
-        packNode(14, "thunderous laughter ", 2, 3, [11, 12, 13, 15]);
-        packNode(15, "twinkling features ", 2, 3, [11, 12, 13, 14]);
-        packNode(16, "boistered ", 2, 3, [17, 18, 19, 0]);
-        packNode(17, "assuaged ", 2, 3, [16, 18, 19, 0]);
-        packNode(18, "echoed in ", 2, 3, [16, 17, 19, 0]);
-        packNode(19, "brushed ", 2, 3, [16, 17, 18, 0]);
-        packNode(20, "his excitement. ", 2, 3, [21, 22, 0, 0]);
-        packNode(21, "his fears. ", 2, 3, [20, 22, 0, 0]);
-        packNode(22, "his ears. ", 2, 3, [20, 21, 0, 0]);
-        packNode(23, "His struggle ", 2, 3, [24, 0, 0, 0]);
-        packNode(24, "His adventure ", 2, 3, [23, 0, 0, 0]);
-        packNode(25, "was just beginning.", 2, 3, [0, 0, 0, 0]);
+        packNode(2, "reached ", 4, 5, [3, 0, 0, 0]);
+        packNode(3, "dropped ", 5, 6, [2, 0, 0, 0]);
+        packNode(4, "upwards ", 7, 8, [5, 6, 0, 0]);
+        packNode(5, "his hands ", 8, 9, [4, 6, 0, 0]);
+        packNode(6, "his eyes ", 9, 10, [4, 5, 0, 0]);
+        packNode(7, "joyously,", 11, 12, [8, 9, 10, 0]);
+        packNode(8, "to the clouds,", 12, 13, [7, 9, 10, 0]);
+        packNode(9, "shyly,", 13, 14, [7, 8, 10, 0]);
+        packNode(10, "towards his shoes,", 14, 15, [7, 8, 9, 0]);
+        packNode(11, "the sun ", 0, 16, [12, 13, 14, 15]);
+        packNode(12, "the wind ", 16, 17, [11, 13, 14, 15]);
+        packNode(13, "the footsteps", 17, 18, [11, 12, 14, 15]);
+        packNode(14, "thunderous laughter ", 18, 19, [11, 12, 13, 15]);
+        packNode(15, "twinkling features ", 19, 0, [11, 12, 13, 14]);
+        packNode(16, "boistered ", 0, 20, [17, 18, 19, 0]);
+        packNode(17, "assuaged ", 20, 21, [16, 18, 19, 0]);
+        packNode(18, "echoed in ", 21, 22, [16, 17, 19, 0]);
+        packNode(19, "brushed ", 22, 0, [16, 17, 18, 0]);
+        packNode(20, "his excitement. ", 0, 23, [21, 22, 0, 0]);
+        packNode(21, "his fears. ", 23, 24, [20, 22, 0, 0]);
+        packNode(22, "his ears. ", 24, 0, [20, 21, 0, 0]);
+        packNode(23, "His struggle ", 0, 25, [24, 0, 0, 0]);
+        packNode(24, "His adventure ", 25, 0, [23, 0, 0, 0]);
+        packNode(25, "was just beginning.", 0, 0, [0, 0, 0, 0]);
     }
 
     /**
@@ -106,16 +101,12 @@ contract PoemPacked is TestablePoem("Poem", "POEM") {
         return uint8(nodes[index][1]);
     }
 
-    function _getJitterChild(uint8 index, uint8 sibIndex) internal view override returns (uint8) {
-        return getSiblings(index)[sibIndex];
-    }
-
-    function getValueBytes(uint8 index) public view returns (bytes32) {
+    function _getValueBytes(uint8 index) internal view override returns (bytes32) {
         indexIsValid(index);
         return nodes[index] & bytes32(VALUE_FILTER);
     }
 
-    function getSiblings(uint8 index) public view returns (uint8[4] memory) {
+    function _getSiblings(uint8 index) internal view override returns (uint8[4] memory) {
         indexIsValid(index);
         uint8[4] memory siblings;
         bytes32 node = nodes[index];

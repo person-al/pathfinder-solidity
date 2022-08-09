@@ -54,7 +54,7 @@ export function shouldBehaveLikePoemStructs(): void {
           3,
           [0, 0, 0, 0],
         ),
-    ).to.be.revertedWith("Value can't be more than 28 characters/bytes");
+    ).to.be.revertedWith("Value can't be more than 26 characters/bytes");
   });
 
   it("errors out if packed with invalid sibling index", async function () {
@@ -66,13 +66,6 @@ export function shouldBehaveLikePoemStructs(): void {
       "A node cannot be its own sibling.",
     );
   });
-
-  // TODO
-  // it("errors out if packed with too many siblings", async function () {
-  //   await expect(this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, [5, 6, 7, 8, 9])).to.be.revertedWith(
-  //     "Can't support more than 4 siblings.",
-  //   );
-  // });
 
   it("can pack and unpack a node successfully", async function () {
     await this.poem.connect(this.signers.admin).storeNode(1, "hello", 2, 3, [0, 0, 0, 0]);

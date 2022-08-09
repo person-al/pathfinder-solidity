@@ -9,8 +9,16 @@ abstract contract TestablePoem is Poem {
 
     constructor(string memory name_, string memory symbol_) Poem(name_, symbol_) {}
 
-    function getHistoricalInput() public view onlyOwner returns (uint256) {
+    function getCurrentPathIndex() public view returns (uint8) {
+        return path[currStep];
+    }
+
+    function getHistoricalInput() public view returns (uint256) {
         return _historicalInput;
+    }
+
+    function setHistoricalInput(uint256 newInput) public onlyOwner {
+        _historicalInput = newInput;
     }
 
     function newHistoricalInput(
@@ -23,16 +31,24 @@ abstract contract TestablePoem is Poem {
         return _newHistoricalInput(currRandomNumber, from, to, difficulty, blockNumber);
     }
 
+    function getSiblings(uint8 index) public view returns (uint8[4] memory) {
+        return _getSiblings(index);
+    }
+
     function getLeftChild(uint8 index) public view returns (uint8) {
         return _getLeftChild(index);
+    }
+
+    function getValueBytes(uint8 index) public view returns (bytes32) {
+        return _getValueBytes(index);
     }
 
     function getRightChild(uint8 index) public view returns (uint8) {
         return _getRightChild(index);
     }
 
-    function getJitterChild(uint8 index, uint8 sibIndex) public view returns (uint8) {
-        return _getJitterChild(index, sibIndex);
+    function getJitterChild(uint8 index, uint256 seed) public view returns (uint8) {
+        return _getJitterChild(index, seed);
     }
 
     function lastTransferedAt(address owner) public view onlyOwner returns (uint64) {

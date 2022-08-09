@@ -20,11 +20,42 @@ abstract contract Poem is ERC721A, Ownable {
         _deployedBlockNumber = block.number;
     }
 
+    function indexIsValid(uint256 _index) internal pure {
+        require(_index > 0, "Use a positive, non-zero index for your nodes.");
+        require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
+    }
+
     function _getLeftChild(uint8 index) internal view virtual returns (uint8);
 
     function _getRightChild(uint8 index) internal view virtual returns (uint8);
 
-    function _getJitterChild(uint8 index, uint8 sibIndex) internal view virtual returns (uint8);
+    function _getValueBytes(uint8 index) internal view virtual returns (bytes32);
+
+    // TODO: can I have this be memory instead of storage?
+    function _getSiblings(uint8 index) internal view virtual returns (uint8[4] memory);
+
+    function _getJitterChild(uint8 index, uint256 seed) internal view returns (uint8) {
+        indexIsValid(index);
+
+        uint8 left = _getLeftChild(index);
+        uint8[4] memory siblings = _getSiblings(left);
+        // pick a sibling at random based on the seed
+        for (uint8 i = 0; i < MAX_NUM_SIBLINGS + 1; i++) {
+            uint8 thisOne = uint8(seed % 2);
+            if (thisOne == 1) {
+                if (i < MAX_NUM_SIBLINGS) {
+                    uint8 sib = siblings[i];
+                    if (sib > 0) {
+                        return sib;
+                    }
+                } else {
+                    return left;
+                }
+            }
+            seed = seed >> 1;
+        }
+        return left;
+    }
 
     function mint() public {
         address to = msg.sender;
@@ -43,6 +74,7 @@ abstract contract Poem is ERC721A, Ownable {
         uint256 difficulty,
         uint256 blockNumber
     ) internal pure returns (uint256) {
+        // TODO: Why am I getting an integer overflow here?
         uint256 adjustment = uint256((uint256(uint160(from)) + uint256(uint160(to))) + difficulty - blockNumber);
         return uint256(currInput + adjustment);
     }
@@ -247,13 +279,14 @@ abstract contract Poem is ERC721A, Ownable {
 
         // Info 2: figure out jitter
         uint8 remainingPercentage = 100 - hiddenPercentage;
-        uint8 jitterPercentage = (remainingPercentage * _jitterLevel(numOwners)) / 100;
-        uint8 childPercentage = (remainingPercentage - jitterPercentage) / 2;
+        uint8 jitterLevel = _jitterLevel(numOwners);
+        uint8 jitterPercentage = uint8((uint16(remainingPercentage) * uint16(jitterLevel)) / 100);
+        uint8 childPercentage = (remainingPercentage - uint8(jitterPercentage)) / 2;
 
         // Now determine the percentage chance we pick an expected child and chance we experience a jitter
         uint8 leftMax = childPercentage;
         uint8 rightMax = 2 * childPercentage;
-        uint8 jitterMax = rightMax + jitterPercentage;
+        uint8 jitterMax = rightMax + uint8(jitterPercentage);
 
         uint256 historicalSeed = uint256(_historicalInput + uint160(info.addr));
         uint8 seed = uint8(historicalSeed % 100);
@@ -265,7 +298,7 @@ abstract contract Poem is ERC721A, Ownable {
         } else if (seed <= rightMax) {
             path[currStep] = _getRightChild(currIndex);
         } else if (seed <= jitterMax) {
-            path[currStep] = _getJitterChild(currIndex, seed % 4);
+            path[currStep] = _getJitterChild(currIndex, historicalSeed >> 30);
         }
         // else, it's in the "hiddenPercentage" zone and we don't pick a child
         return;
