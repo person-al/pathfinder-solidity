@@ -2,7 +2,12 @@ import { mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 export function shouldBehaveLikePoem(): void {
-  describe("Poem withdraw", function () {});
+  describe("Poem withdraw", function () {
+    it("only allows owner to withdraw");
+    it("allows owner to withdraw ETH");
+    it("allows owner to withdraw random ERC20 tokens");
+    it("allows owner to withdraw random ERC721A tokens");
+  });
 
   describe("Poem Minting Requirements", function () {
     // TODO: minting price
@@ -132,7 +137,6 @@ export function shouldBehaveLikePoem(): void {
     });
 
     it("on burn, update currStep and path", async function () {
-      await this.poem.connect(this.signers.admin).initialize();
       await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(0);
       expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
@@ -151,7 +155,19 @@ export function shouldBehaveLikePoem(): void {
     });
   });
 
-  describe("Poem Pseudorandom number adjuster", function () {});
+  describe("Poem historicalInput adjustments", function () {
+    it("when there's an overflow, the contract is okay with it", async function () {
+      const difficulty = 5;
+      const blockNumber = 0;
+      const from = 7;
+      const to = 0;
+      const currInput = BigInt("115792089237316195423570985008687907853269984665640564039457584007913129639935");
+      const historicalInput = await this.poem
+        .connect(this.signers.admin)
+        .newHistoricalInput(currInput, from, to, difficulty, blockNumber);
+      expect(historicalInput).to.equal(5 + 7 - 1);
+    });
+  });
 
   describe("Poem multiple transfers in a row", function () {
     it("transferring multiple times properly updates owner count");
@@ -181,10 +197,6 @@ export function shouldBehaveLikePoem(): void {
   });
 
   describe("Poem takeNextStep", function () {
-    beforeEach(async function () {
-      await this.poem.connect(this.signers.admin).initialize();
-    });
-
     it("should be opaque", async function () {
       // start by minting
       await this.poem.connect(this.signers.admin).mint();
@@ -237,191 +249,219 @@ export function shouldBehaveLikePoem(): void {
       expect(await this.poem.path(1)).to.equal(3);
     });
 
-    // TODO: works for PoemPacked but not PoemStruct
-    // describe("should take jitter step and choose", function () {
-    //   beforeEach(async function () {
-    //     // mint 3 tokens and burn all of them
-    //     for (let i=0; i < 3; i++) {
-    //       await this.poem.connect(this.signers.others[i]).mint();
-    //       // set historical seed so we always choose the left child
-    //       await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('1157920892373161954235709850086879078532699846656405640394575840079131296400')-BigInt(this.signers.others[i].address));
-    //       await this.poem.connect(this.signers.others[i]).burn(i);
-    //     }
-    //     // Now mint the 4th token. It has 4 kids to choose from when jittering
-    //     await this.poem.connect(this.signers.admin).mint();
-    //     // pass it back and forth 8 times so that jitterLevel is 10
-    //     const fromUser = [this.signers.admin, this.signers.user]
-    //     const toUser = [this.signers.user, this.signers.admin]
-    //     for (let i=0; i < 8; i++) {
-    //       const userIndex = i%2;
-    //       await this.poem.connect(fromUser[userIndex]).transferFrom(
-    //         fromUser[userIndex].address, toUser[userIndex].address, 3);
-    //     }
-    //   });
+    describe("should take jitter step and choose", function () {
+      beforeEach(async function () {
+        // mint 3 tokens and burn all of them
+        for (let i = 0; i < 3; i++) {
+          await this.poem.connect(this.signers.others[i]).mint();
+          // set historical seed so we always choose the left child
+          await this.poem
+            .connect(this.signers.admin)
+            .setHistoricalInput(
+              BigInt("1157920892373161954235709850086879078532699846656405640394575840079131296400") -
+                BigInt(this.signers.others[i].address),
+            );
+          await this.poem.connect(this.signers.others[i]).burn(i);
+        }
+        // Now mint the 4th token. It has 4 kids to choose from when jittering
+        await this.poem.connect(this.signers.admin).mint();
+        // pass it back and forth 8 times so that jitterLevel is 10
+        const fromUser = [this.signers.admin, this.signers.user];
+        const toUser = [this.signers.user, this.signers.admin];
+        for (let i = 0; i < 8; i++) {
+          const userIndex = i % 2;
+          await this.poem
+            .connect(fromUser[userIndex])
+            .transferFrom(fromUser[userIndex].address, toUser[userIndex].address, 3);
+        }
+      });
 
-    //   it("left", async function() {
-    //     // If we chose left, we should be at node 7 right now.
-    //     expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
-    //     expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
-    //     expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
-    //     expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
-    //     expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
-    //     expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
+      it("left", async function () {
+        // If we chose left, we should be at node 7 right now.
+        expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
+        expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
+        expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
+        expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
+        expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
+        expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
-    //     // The token has been minted and was passed around the owner number is 8.
-    //     // This means a 10% jitter likelihood. Values are currently: [45,90,100]
-    //     // So in order to jitter I need seed % 100 > 90
-    //     // The siblings list will be 15, 14, 13, 12, (11 is left)
-    //     // Then inside the jitter function, I need it to go 0,0,0,0,1
-    //     // So the final 5 bits are 10000
-    //     await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('96230537732805810709003998350712726735510319204374157684181885535773934182995')-BigInt(this.signers.admin.address));
-    //     // so now if we burn, the next step should be 11
-    //     await this.poem.connect(this.signers.admin).burn(3);
-    //     expect(await this.poem.currStep()).to.equal(4);
-    //     expect(await this.poem.path(4)).to.equal(11);
-    //   });
+        // The token has been minted and was passed around the owner number is 8.
+        // This means a 10% jitter likelihood. Values are currently: [45,90,100]
+        // So in order to jitter I need seed % 100 > 90
+        // The siblings list will be 15, 14, 13, 12, (11 is left)
+        // Then inside the jitter function, I need it to go 0,0,0,0,1
+        // So the final 5 bits are 10000
+        await this.poem
+          .connect(this.signers.admin)
+          .setHistoricalInput(
+            BigInt("96230537732805810709003998350712726735510319204374157684181885535773934182995") -
+              BigInt(this.signers.admin.address),
+          );
+        // so now if we burn, the next step should be 11
+        await this.poem.connect(this.signers.admin).burn(3);
+        expect(await this.poem.currStep()).to.equal(4);
+        expect(await this.poem.path(4)).to.equal(11);
+      });
 
-    //   it("right", async function() {
-    //     // If we chose left, we should be at node 7 right now.
-    //     expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
-    //     expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
-    //     expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
-    //     expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
-    //     expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
-    //     expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
+      it("right", async function () {
+        // If we chose left, we should be at node 7 right now.
+        expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
+        expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
+        expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
+        expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
+        expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
+        expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
-    //     // I need seed % 100 > 80
-    //     // The siblings list will be 15, 14, 13, 12, (11 is left)
-    //     // Then inside the jitter function, I need it to go 0,0,0,1,0
-    //     // So the final 5 bits are 10000
-    //     await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('61918807874958815746790948911337494449742115977377729583759372904494587393595')-BigInt(this.signers.admin.address));
-    //     // so now if we burn, the next step should be 11
-    //     await this.poem.connect(this.signers.admin).burn(3);
-    //     expect(await this.poem.currStep()).to.equal(4);
-    //     expect(await this.poem.path(4)).to.equal(12);
-    //   });
+        // I need seed % 100 > 80
+        // The siblings list will be 15, 14, 13, 12, (11 is left)
+        // Then inside the jitter function, I need it to go 0,0,0,1,0
+        // So the final 5 bits are 10000
+        await this.poem
+          .connect(this.signers.admin)
+          .setHistoricalInput(
+            BigInt("61918807874958815746790948911337494449742115977377729583759372904494587393595") -
+              BigInt(this.signers.admin.address),
+          );
+        // so now if we burn, the next step should be 11
+        await this.poem.connect(this.signers.admin).burn(3);
+        expect(await this.poem.currStep()).to.equal(4);
+        expect(await this.poem.path(4)).to.equal(12);
+      });
 
-    //   it("sibling 1", async function() {
-    //     // If we chose left, we should be at node 7 right now.
-    //     expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
-    //     expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
-    //     expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
-    //     expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
-    //     expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
-    //     expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
+      it("sibling 1", async function () {
+        // If we chose left, we should be at node 7 right now.
+        expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
+        expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
+        expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
+        expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
+        expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
+        expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
-    //     // I need seed % 100 > 90
-    //     // The siblings list will be 15, 14, 13, 12, (11 is left)
-    //     // Then inside the jitter function, I need it to go 0,0,1,0,0
-    //     // So the final 5 bits are 00100
-    //     await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('14020019946167396737247803966093464688787132973293974027242799015757365473195')-BigInt(this.signers.admin.address));
-    //     // so now if we burn, the next step should be 11
-    //     await this.poem.connect(this.signers.admin).burn(3);
-    //     expect(await this.poem.currStep()).to.equal(4);
-    //     expect(await this.poem.path(4)).to.equal(13);
-    //   });
+        // I need seed % 100 > 90
+        // The siblings list will be 15, 14, 13, 12, (11 is left)
+        // Then inside the jitter function, I need it to go 0,0,1,0,0
+        // So the final 5 bits are 00100
+        await this.poem
+          .connect(this.signers.admin)
+          .setHistoricalInput(
+            BigInt("14020019946167396737247803966093464688787132973293974027242799015757365473195") -
+              BigInt(this.signers.admin.address),
+          );
+        // so now if we burn, the next step should be 11
+        await this.poem.connect(this.signers.admin).burn(3);
+        expect(await this.poem.currStep()).to.equal(4);
+        expect(await this.poem.path(4)).to.equal(13);
+      });
 
-    //   it("sibling 2", async function() {
-    //     // If we chose left, we should be at node 7 right now.
-    //     expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
-    //     expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
-    //     expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
-    //     expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
-    //     expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
-    //     expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
+      it("sibling 2", async function () {
+        // If we chose left, we should be at node 7 right now.
+        expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
+        expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
+        expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
+        expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
+        expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
+        expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
-    //     // Final 5 bits are 00010
-    //     await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('114655377565417663845180483440748171914344049594080292602998703635102979546695')-BigInt(this.signers.admin.address));
-    //     // so now if we burn, the next step should be 11
-    //     await this.poem.connect(this.signers.admin).burn(3);
-    //     expect(await this.poem.currStep()).to.equal(4);
-    //     expect(await this.poem.path(4)).to.equal(14);
-    //   });
+        // Final 5 bits are 00010
+        await this.poem
+          .connect(this.signers.admin)
+          .setHistoricalInput(
+            BigInt("114655377565417663845180483440748171914344049594080292602998703635102979546695") -
+              BigInt(this.signers.admin.address),
+          );
+        // so now if we burn, the next step should be 11
+        await this.poem.connect(this.signers.admin).burn(3);
+        expect(await this.poem.currStep()).to.equal(4);
+        expect(await this.poem.path(4)).to.equal(14);
+      });
 
-    //   it("sibling 3", async function() {
-    //     // If we chose left, we should be at node 7 right now.
-    //     expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
-    //     expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
-    //     expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
-    //     expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
-    //     expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
-    //     expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
+      it("sibling 3", async function () {
+        // If we chose left, we should be at node 7 right now.
+        expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
+        expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
+        expect(await this.poem.connect(this.signers.admin).path(1)).to.equal(2);
+        expect(await this.poem.connect(this.signers.admin).path(2)).to.equal(4);
+        expect(await this.poem.connect(this.signers.admin).path(3)).to.equal(7);
+        expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
-    //     // Final 5 bits are 00001
-    //     // So the number is: 18129116707341080426964920390299662852095841932611337458718960052007814971695
-    //     await this.poem.connect(this.signers.admin).setHistoricalInput(BigInt('18129116707341080426964920390299662852095841932611337458718960052007814971695')-BigInt(this.signers.admin.address));
-    //     // so now if we burn, the next step should be 11
-    //     await this.poem.connect(this.signers.admin).burn(3);
-    //     expect(await this.poem.currStep()).to.equal(4);
-    //     expect(await this.poem.path(4)).to.equal(15);
-    //   });
-    // });
+        // Final 5 bits are 00001
+        // So the number is: 18129116707341080426964920390299662852095841932611337458718960052007814971695
+        await this.poem
+          .connect(this.signers.admin)
+          .setHistoricalInput(
+            BigInt("18129116707341080426964920390299662852095841932611337458718960052007814971695") -
+              BigInt(this.signers.admin.address),
+          );
+        // so now if we burn, the next step should be 11
+        await this.poem.connect(this.signers.admin).burn(3);
+        expect(await this.poem.currStep()).to.equal(4);
+        expect(await this.poem.path(4)).to.equal(15);
+      });
+    });
   });
 
-  describe("Poem testing distributions", function () {
-    // const randomBinaryString = (length: number) => {
-    //   // Declare all characters
-    //   const chars = "01";
+  describe("Poem stress tests", function () {
+    const randomBinaryString = (length: number) => {
+      // Declare all characters
+      const chars = "01";
 
-    //   // Pick characers randomly
-    //   let str = "0b";
-    //   for (let i = 0; i < length; i++) {
-    //     str += chars.charAt(Math.floor(Math.random() * chars.length));
-    //   }
+      // Pick characers randomly
+      let str = "0b";
+      for (let i = 0; i < length; i++) {
+        str += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
 
-    //   return str;
-    // };
+      return str;
+    };
 
-    // TODO: getting overflow issues
-    it("calculate distribution of newHistoricalInput", async function () {
-      //   // for (let i=0; i<3000; i++) {
-      //   console.log(`let's do this 2`);
-      //   const historicalInputs = [];
-      //   const difficulties = [];
-      //   const blockNumbers = [];
-      //   const froms = [];
-      //   const tos = [];
-      //   let historicalInput = [
-      //     0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-      //   ];
-      //   let difficulty = BigInt(randomBinaryString(256));
-      //   let blockNumber = BigInt(randomBinaryString(256));
-      //   // historicalInputs.push(JSON.stringify({x:blockNumber, y:1}));
-      //   // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
-      //   // blockNumbers.push(JSON.stringify({x:0, y:blockNumber}));
-      //   for (let k = 0; k < 3000; k++) {
-      //     if (k % 100 == 0) {
-      //       console.log(`subtest ${k}`);
-      //     }
-      //     const from = BigInt(randomBinaryString(256));
-      //     const to = BigInt(randomBinaryString(256));
-      //     // froms.push(JSON.stringify({x:blockNumber, y:from}));
-      //     // tos.push(JSON.stringify({x:blockNumber, y:to}));
-      //     historicalInput = await this.poem
-      //       .connect(this.signers.admin)
-      //       .newHistoricalInput(historicalInput, from, to, difficulty, blockNumber);
-      //     // Move ahead by max 90ish days
-      //     blockNumber += BigInt(randomBinaryString(19));
-      //     // Adjust difficulty every 100-200 blocks by a semi-random amount
-      //     if (k % 3 == 0) {
-      //       difficulty += BigInt(randomBinaryString(100));
-      //     }
-      //     if (k % 7 == 0) {
-      //       difficulty -= BigInt(randomBinaryString(100));
-      //     }
-      //     // historicalInputs.push(JSON.stringify({x:blockNumber, y:historicalInput}));
-      //     // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
-      //     // blockNumbers.push(JSON.stringify({x: k+1, y:blockNumber}));
-      //   }
-      //   // console.log(`historicalInputs: ${historicalInputs}\n`);
-      //   // console.log(`difficulties: ${difficulties}\n`);
-      //   // console.log(`blockNumbers: ${blockNumbers}\n`);
-      //   // console.log(`froms: ${froms}\n`);
-      //   // console.log(`tos: ${tos}\n`);
-      //   // }
+    it("simulate 1000 newHistoricalInput updates", async function () {
+      const historicalInputs = [];
+      const difficulties = [];
+      const blockNumbers = [];
+      const froms = [];
+      const tos = [];
+      let historicalInput = [
+        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
+      ];
+      let difficulty = BigInt(randomBinaryString(256));
+      let blockNumber = BigInt(randomBinaryString(256));
+      // historicalInputs.push(JSON.stringify({x:blockNumber, y:1}));
+      // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
+      // blockNumbers.push(JSON.stringify({x:0, y:blockNumber}));
+      for (let k = 0; k < 1000; k++) {
+        // if (k % 1000 == 0) {
+        //   console.log(`subtest ${k}`);
+        // }
+        const from = BigInt(randomBinaryString(256));
+        const to = BigInt(randomBinaryString(256));
+        // froms.push(JSON.stringify({x:blockNumber, y:from}));
+        // tos.push(JSON.stringify({x:blockNumber, y:to}));
+        historicalInput = await this.poem
+          .connect(this.signers.admin)
+          .newHistoricalInput(historicalInput, from, to, difficulty, blockNumber);
+        // Move ahead by max 90ish days
+        blockNumber += BigInt(randomBinaryString(19));
+        // Adjust difficulty every 100-200 blocks by a semi-random amount
+        if (k % 3 == 0) {
+          difficulty += BigInt(randomBinaryString(100));
+        }
+        if (k % 7 == 0) {
+          difficulty -= BigInt(randomBinaryString(100));
+        }
+        // historicalInputs.push(JSON.stringify({x:blockNumber, y:historicalInput}));
+        // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
+        // blockNumbers.push(JSON.stringify({x: k+1, y:blockNumber}));
+      }
+      // console.log(`historicalInputs: ${historicalInputs}\n`);
+      // console.log(`difficulties: ${difficulties}\n`);
+      // console.log(`blockNumbers: ${blockNumbers}\n`);
+      // console.log(`froms: ${froms}\n`);
+      // console.log(`tos: ${tos}\n`);
     });
 
-    it("calculate distribution of getCurrIndex");
-    it("calculate distribution of takeNextStep");
+    it("simulate 3000 getCurrIndex updates");
+    it("simulate 3000 takeNextStep updates");
+
+    it("simulate entire contract lifecycle 3000 times");
   });
 }

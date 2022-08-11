@@ -5,16 +5,44 @@ import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-abstract contract Poem is ERC721A, Ownable {
+contract Poem is ERC721A, Ownable {
     uint8 public constant MAX_NUM_SIBLINGS = 4;
-    uint8 public constant MAX_LEN_VALUE = 26;
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
+    uint256 private constant VALUE_FILTER = 0x000000ffffffffffffffffffffffffff;
 
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
-    uint256 private immutable _deployedBlockNumber;
     uint256 internal _historicalInput = 1;
+    uint256[26] internal nodes = [
+        0x0000000000000000000000000000000000000000000000000000000000000000,
+        0x0203000000000000000000000000000000000000000000000000417320686520,
+        0x0405000000030000000000000000000000000000000000007265616368656420,
+        0x05060000000200000000000000000000000000000000000064726f7070656420,
+        0x0708000006050000000000000000000000000000000000007570776172647320,
+        0x080900000604000000000000000000000000000000006869732068616e647320,
+        0x090a000005040000000000000000000000000000000000686973206579657320,
+        0x0b0c000a090800000000000000000000000000000000006a6f796f75736c792c,
+        0x0c0d000a0907000000000000000000000000746f2074686520636c6f7564732c,
+        0x0d0e000a080700000000000000000000000000000000000000007368796c792c,
+        0x0e0f000908070000000000000000746f7761726473206869732073686f65732c,
+        0x00100f0e0d0c0000000000000000000000000000000000007468652073756e20,
+        0x10110f0e0d0b00000000000000000000000000000000007468652077696e6420,
+        0x11120f0e0c0b0000000000000000000000000074686520666f6f747374657073,
+        0x12130f0d0c0b0000000000007468756e6465726f7573206c6175676874657220,
+        0x13000e0d0c0b000000000000007477696e6b6c696e6720666561747572657320,
+        0x00140013121100000000000000000000000000000000626f6973746572656420,
+        0x1415001312100000000000000000000000000000000000617373756167656420,
+        0x151600131110000000000000000000000000000000006563686f656420696e20,
+        0x1600001211100000000000000000000000000000000000006272757368656420,
+        0x00170000161500000000000000000000686973206578636974656d656e742e20,
+        0x1718000016140000000000000000000000000000006869732066656172732e20,
+        0x1800000015140000000000000000000000000000000068697320656172732e20,
+        0x00190000001800000000000000000000000000486973207374727567676c6520,
+        0x19000000001700000000000000000000000048697320616476656e7475726520,
+        0x00000000000000000000000000776173206a75737420626567696e6e696e672e
+    ];
+    uint256 private immutable _deployedBlockNumber;
 
     constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {
         _deployedBlockNumber = block.number;
@@ -25,36 +53,56 @@ abstract contract Poem is ERC721A, Ownable {
         require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
     }
 
-    function _getLeftChild(uint8 index) internal view virtual returns (uint8);
+    function _getNode(uint8 index) internal view returns (bytes32) {
+        return bytes32(nodes[index]);
+    }
 
-    function _getRightChild(uint8 index) internal view virtual returns (uint8);
+    function _getLeftChild(uint8 index) internal view returns (uint8) {
+        indexIsValid(index);
+        return uint8(_getNode(index)[0]);
+    }
 
-    function _getValueBytes(uint8 index) internal view virtual returns (bytes32);
+    function _getRightChild(uint8 index) internal view returns (uint8) {
+        indexIsValid(index);
+        return uint8(_getNode(index)[1]);
+    }
 
-    // TODO: can I have this be memory instead of storage?
-    function _getSiblings(uint8 index) internal view virtual returns (uint8[4] memory);
+    function _getValueBytes(uint8 index) internal view returns (bytes32) {
+        indexIsValid(index);
+        return _getNode(index) & bytes32(VALUE_FILTER);
+    }
+
+    function _getSiblings(uint8 index) internal view returns (uint8[4] memory) {
+        indexIsValid(index);
+        uint8[4] memory siblings;
+        bytes32 node = _getNode(index);
+        for (uint8 i = 0; i < MAX_NUM_SIBLINGS; i++) {
+            uint8 sib = uint8(node[2 + i]);
+            siblings[i] = sib;
+        }
+        return siblings;
+    }
 
     function _getJitterChild(uint8 index, uint256 seed) internal view returns (uint8) {
         indexIsValid(index);
 
         uint8 left = _getLeftChild(index);
+        uint8 right = _getRightChild(index);
         uint8[4] memory siblings = _getSiblings(left);
-        // pick a sibling at random based on the seed
-        for (uint8 i = 0; i < MAX_NUM_SIBLINGS + 1; i++) {
+        // "jittering" should usually take us off the expected path.
+        for (uint8 i = 0; i < MAX_NUM_SIBLINGS; i++) {
             uint8 thisOne = uint8(seed % 2);
-            if (thisOne == 1) {
-                if (i < MAX_NUM_SIBLINGS) {
-                    uint8 sib = siblings[i];
-                    if (sib > 0) {
-                        return sib;
-                    }
-                } else {
-                    return left;
-                }
+            uint8 sib = siblings[i];
+            if (thisOne == 1 && sib != right && sib > 0) {
+                return sib;
             }
             seed = seed >> 1;
         }
-        return left;
+        // but sometimes, we stay on the path
+        if (seed % 2 == 1) {
+            return left;
+        }
+        return right;
     }
 
     function mint() public {
@@ -74,9 +122,17 @@ abstract contract Poem is ERC721A, Ownable {
         uint256 difficulty,
         uint256 blockNumber
     ) internal pure returns (uint256) {
-        // TODO: Why am I getting an integer overflow here?
-        uint256 adjustment = uint256((uint256(uint160(from)) + uint256(uint160(to))) + difficulty - blockNumber);
-        return uint256(currInput + adjustment);
+        // We're okay with an overflow or underflow here.
+        // This is about storing the "essence" of history, not keep an accurate record.
+        unchecked {
+            uint256 part1 = uint160(from) + difficulty;
+            uint256 part2 = uint160(to) + blockNumber;
+            if (part1 > part2) {
+                return currInput + part1 - part2;
+            } else {
+                return currInput + part2 - part1;
+            }
+        }
     }
 
     /**
@@ -100,7 +156,7 @@ abstract contract Poem is ERC721A, Ownable {
         address to,
         uint256,
         uint256
-    ) internal virtual override {
+    ) internal override {
         _historicalInput = _newHistoricalInput(
             _historicalInput,
             uint256(uint160(from)),
@@ -112,7 +168,7 @@ abstract contract Poem is ERC721A, Ownable {
             // If it's not being burned, store transfer timestamp
             //      Because we only have 64 bits, we can't store the full block number.
             //      Instead, we'll store the difference between this block and the deploy block.
-            //      That's enough bits to store an excessive amount of time. Roughly 77M centuries
+            //      That's enough bits to store roughly 77M centuries
             //      from deployment, if I'm counting correctly.
             uint64 MAX_VAL = 18446744073709551615;
             uint256 newBlockNumber = block.number - _deployedBlockNumber;
@@ -142,15 +198,18 @@ abstract contract Poem is ERC721A, Ownable {
         address,
         address to,
         uint24 previousExtraData
-    ) internal view virtual override returns (uint24) {
+    ) internal pure override returns (uint24) {
         if (to == address(0)) {
             // If it's being burned, we don't need to store anything
             return previousExtraData;
         }
 
         uint24 MAX_VAL = 16777215;
-
-        uint32 numOwnersHad = previousExtraData + 1;
+        uint32 numOwnersHad;
+        unchecked {
+            // This will never overflow bc previousExtraData is a uint24 and numOwnersHad is a uint32.
+            numOwnersHad = previousExtraData + 1;
+        }
         if (numOwnersHad >= MAX_VAL) {
             return MAX_VAL;
         } else {
@@ -182,9 +241,9 @@ abstract contract Poem is ERC721A, Ownable {
     ) internal override {
         // If we're burning the token and we're not done, take the next step.
         // Note that calling this in _beforeTokenTransfers instead of in the public burn function
-        // Ensures that the owner check on burning happens BEFORE we take the step.
+        // ensures that the owner check on burning happens BEFORE we take the step.
         if (uint160(to) == 0) {
-            if (currStep <= 6) {
+            if (currStep < MAX_NUM_NFTS) {
                 takeNextStep(startTokenId);
             }
         }
@@ -197,7 +256,7 @@ abstract contract Poem is ERC721A, Ownable {
      *
      * - The caller must own `tokenId` or be an approved operator.
      */
-    function burn(uint256 tokenId) public virtual {
+    function burn(uint256 tokenId) public {
         _burn(tokenId, true);
     }
 
@@ -224,8 +283,8 @@ abstract contract Poem is ERC721A, Ownable {
         }
     }
 
-    function _jitterLevel(uint24 numOwners) internal view returns (uint8) {
-        if (numOwners < 5 || currStep == 0) {
+    function _jitterLevel(uint24 numOwners) internal pure returns (uint8) {
+        if (numOwners < 5) {
             return 0;
         } else if (numOwners >= 5 && numOwners < 10) {
             return 10;
@@ -241,11 +300,14 @@ abstract contract Poem is ERC721A, Ownable {
     }
 
     function _getCurrIndex(uint160 fromSeed) internal view returns (uint8) {
+        // If our currIndex is non-zero, return it.
         uint8 currIndex = path[currStep];
         if (currIndex != 0) {
             return currIndex;
         }
-        // Otherwise, pick one of our potential indices:
+
+        // If we had an opacity issue and don't know where we are,
+        // pick a random place we _could_ be to decide where to go next.
         // 1. Figure out the last time we had a value
         uint8 nonZeroStep = currStep;
         while (currIndex == 0 && nonZeroStep > 0) {
@@ -253,6 +315,7 @@ abstract contract Poem is ERC721A, Ownable {
             currIndex = path[nonZeroStep];
         }
 
+        // 2. Take a pseudorandom walk to a place we could be
         for (uint8 i = nonZeroStep; i < currStep; i++) {
             if (fromSeed % 2 == 0) {
                 currIndex = _getLeftChild(currIndex);
@@ -283,11 +346,12 @@ abstract contract Poem is ERC721A, Ownable {
         uint8 jitterPercentage = uint8((uint16(remainingPercentage) * uint16(jitterLevel)) / 100);
         uint8 childPercentage = (remainingPercentage - uint8(jitterPercentage)) / 2;
 
-        // Now determine the percentage chance we pick an expected child and chance we experience a jitter
+        // Now determine the percentage chance we pick an expected child and the chance we experience a jitter
         uint8 leftMax = childPercentage;
         uint8 rightMax = 2 * childPercentage;
         uint8 jitterMax = rightMax + uint8(jitterPercentage);
 
+        // TODO: handle potential overflow
         uint256 historicalSeed = uint256(_historicalInput + uint160(info.addr));
         uint8 seed = uint8(historicalSeed % 100);
 

@@ -1,7 +1,7 @@
 import { expect } from "chai";
 
-export function shouldBehaveLikePoemPacked(): void {
-  describe("PoemPacked getters", function () {
+export function shouldBehaveLikeTestablePoem(): void {
+  describe("TestablePoem getters", function () {
     it("throws require when getting a Node that doesn't exist", async function () {
       await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWith(
         "Use a positive, non-zero index for your nodes.",
@@ -17,17 +17,17 @@ export function shouldBehaveLikePoemPacked(): void {
       );
     });
 
-    it("returns 0s for all get functions if deployed with no changes", async function () {
-      expect(await this.poem.connect(this.signers.admin).getLeftChild(1)).to.equal(0);
-      expect(await this.poem.connect(this.signers.admin).getRightChild(1)).to.equal(0);
+    it("returns valid info if deployed with no changes", async function () {
+      expect(await this.poem.connect(this.signers.admin).getLeftChild(1)).to.equal(2);
+      expect(await this.poem.connect(this.signers.admin).getRightChild(1)).to.equal(3);
       expect(await this.poem.connect(this.signers.admin).getValueBytes(1)).to.equal(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "0x0000000000000000000000000000000000000000000000000000417320686520",
       );
       expect(await this.poem.connect(this.signers.admin).getSiblings(1)).deep.equal([0, 0, 0, 0]);
     });
   });
 
-  describe("PoemPacked packing and unpacking", function () {
+  describe("TestablePoem packing and unpacking", function () {
     it("errors out if packed with invalid index", async function () {
       await expect(this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [0, 0, 0, 0])).to.be.revertedWith(
         "Use a positive, non-zero index for your nodes.",

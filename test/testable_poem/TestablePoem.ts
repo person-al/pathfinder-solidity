@@ -4,10 +4,10 @@ import { ethers } from "hardhat";
 
 import { shouldBehaveLikePoem } from "../poem/Poem.behavior";
 import type { Signers } from "../types";
-import { shouldBehaveLikePoemPacked } from "./PoemPacked.behavior";
-import { deployPoemFixture } from "./PoemPacked.fixture";
+import { shouldBehaveLikeTestablePoem } from "./TestablePoem.behavior";
+import { deployPoemFixture } from "./TestablePoem.fixture";
 
-describe("PoemPacked", function () {
+describe("TestablePoem", function () {
   before(async function () {
     this.signers = {} as Signers;
 
@@ -24,6 +24,6 @@ describe("PoemPacked", function () {
     this.poem = poem;
   });
 
-  shouldBehaveLikePoemPacked();
+  shouldBehaveLikeTestablePoem();
   shouldBehaveLikePoem();
 });

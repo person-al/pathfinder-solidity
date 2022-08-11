@@ -1,5 +1,39 @@
 ## 2022-08-09
 
+- Removing PoemStructs implementation and reorganizing PoemPacked code to split between Poem and TestablePoem.
+- This means Poem and TestablePoem no longer need to be abstract.
+- Initialized Poem with the hardcoded nodes for testnet deploy. TestablePoem can always pack or unpack its own nodes.
+
+### Gas usage
+
+Note that if we compare these gas costs to the previous charts, hardcoding the list of nodes seems to save us some gas (roughly 7% lower deployment costs compared to calling initialize in the PoemPacked constructor).
+
+```
+·---------------------------------------|---------------------------|-------------|-----------------------------·
+|         Solc version: 0.8.15          ·  Optimizer enabled: true  ·  Runs: 800  ·  Block limit: 30000000 gas  │
+········································|···························|·············|······························
+|  Methods                                                                                                      │
+·················|······················|·············|·············|·············|···············|··············
+|  Contract      ·  Method              ·  Min        ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  burn                ·      64967  ·      99129  ·      80250  ·           26  ·          -  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  mint                ·      79514  ·      96614  ·      87226  ·           51  ·          -  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  packNode            ·      39445  ·      39505  ·      39482  ·           19  ·          -  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  setHistoricalInput  ·      29019  ·      29031  ·      29026  ·           23  ·          -  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  transferFrom        ·      50490  ·      67592  ·      53910  ·           50  ·          -  │
+·················|······················|·············|·············|·············|···············|··············
+|  Deployments                          ·                                         ·  % of limit   ·             │
+········································|·············|·············|·············|···············|··············
+|  TestablePoem                         ·          -  ·          -  ·    3787102  ·       12.6 %  ·          -  │
+·---------------------------------------|-------------|-------------|-------------|---------------|-------------·
+```
+
+## 2022-08-09
+
 - Been modularizing code and adding tests
 - It's clear that structs vs. packing only helps in a few key places: storing the node information and initializing. Because with PoemPacked we don't have to initialize, we can hardcode the node values, I think PoemPacked will save significant gas. So at this point I think we can remove the structs code. We have the gas calc below to do comparisons later if needed.
 
