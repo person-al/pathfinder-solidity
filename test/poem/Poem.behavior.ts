@@ -100,21 +100,23 @@ export function shouldBehaveLikePoem(): void {
 
     it("doesn't allow transfer if receiver already hold three tokens", async function () {
       await this.poem.connect(this.signers.admin).mint();
-      this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
+      await this.poem
+        .connect(this.signers.admin)
+        .transferFrom(this.signers.admin.address, this.signers.user.address, 0);
 
       await this.poem.connect(this.signers.others[0]).mint();
-      this.poem
+      await this.poem
         .connect(this.signers.others[0])
         .transferFrom(this.signers.others[0].address, this.signers.user.address, 1);
 
       await this.poem.connect(this.signers.others[1]).mint();
-      this.poem
+      await this.poem
         .connect(this.signers.others[1])
         .transferFrom(this.signers.others[1].address, this.signers.user.address, 2);
 
       await this.poem.connect(this.signers.others[2]).mint();
-      expect(
-        await this.poem
+      await expect(
+        this.poem
           .connect(this.signers.others[2])
           .transferFrom(this.signers.others[2].address, this.signers.user.address, 3),
       ).to.be.revertedWith("One can hold max 3 tokens at a time.");
@@ -398,70 +400,5 @@ export function shouldBehaveLikePoem(): void {
         expect(await this.poem.path(4)).to.equal(15);
       });
     });
-  });
-
-  describe("Poem stress tests", function () {
-    const randomBinaryString = (length: number) => {
-      // Declare all characters
-      const chars = "01";
-
-      // Pick characers randomly
-      let str = "0b";
-      for (let i = 0; i < length; i++) {
-        str += chars.charAt(Math.floor(Math.random() * chars.length));
-      }
-
-      return str;
-    };
-
-    it("simulate 1000 newHistoricalInput updates", async function () {
-      const historicalInputs = [];
-      const difficulties = [];
-      const blockNumbers = [];
-      const froms = [];
-      const tos = [];
-      let historicalInput = [
-        0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1,
-      ];
-      let difficulty = BigInt(randomBinaryString(256));
-      let blockNumber = BigInt(randomBinaryString(256));
-      // historicalInputs.push(JSON.stringify({x:blockNumber, y:1}));
-      // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
-      // blockNumbers.push(JSON.stringify({x:0, y:blockNumber}));
-      for (let k = 0; k < 1000; k++) {
-        // if (k % 1000 == 0) {
-        //   console.log(`subtest ${k}`);
-        // }
-        const from = BigInt(randomBinaryString(256));
-        const to = BigInt(randomBinaryString(256));
-        // froms.push(JSON.stringify({x:blockNumber, y:from}));
-        // tos.push(JSON.stringify({x:blockNumber, y:to}));
-        historicalInput = await this.poem
-          .connect(this.signers.admin)
-          .newHistoricalInput(historicalInput, from, to, difficulty, blockNumber);
-        // Move ahead by max 90ish days
-        blockNumber += BigInt(randomBinaryString(19));
-        // Adjust difficulty every 100-200 blocks by a semi-random amount
-        if (k % 3 == 0) {
-          difficulty += BigInt(randomBinaryString(100));
-        }
-        if (k % 7 == 0) {
-          difficulty -= BigInt(randomBinaryString(100));
-        }
-        // historicalInputs.push(JSON.stringify({x:blockNumber, y:historicalInput}));
-        // difficulties.push(JSON.stringify({x:blockNumber, y:difficulty}));
-        // blockNumbers.push(JSON.stringify({x: k+1, y:blockNumber}));
-      }
-      // console.log(`historicalInputs: ${historicalInputs}\n`);
-      // console.log(`difficulties: ${difficulties}\n`);
-      // console.log(`blockNumbers: ${blockNumbers}\n`);
-      // console.log(`froms: ${froms}\n`);
-      // console.log(`tos: ${tos}\n`);
-    });
-
-    it("simulate 3000 getCurrIndex updates");
-    it("simulate 3000 takeNextStep updates");
-
-    it("simulate entire contract lifecycle 3000 times");
   });
 }

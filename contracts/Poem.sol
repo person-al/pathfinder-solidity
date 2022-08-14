@@ -88,7 +88,16 @@ contract Poem is ERC721A, Ownable {
 
         uint8 left = _getLeftChild(index);
         uint8 right = _getRightChild(index);
-        uint8[4] memory siblings = _getSiblings(left);
+        uint8[4] memory siblings = [0, 0, 0, 0];
+        if (left > 0) {
+            siblings = _getSiblings(left);
+        } else if (right > 0) {
+            siblings = _getSiblings(right);
+        } else {
+            // TODO: emit an error?
+            console.log("this isn't possible. How did we get here?");
+            return 0;
+        }
         // "jittering" should usually take us off the expected path.
         for (uint8 i = 0; i < MAX_NUM_SIBLINGS; i++) {
             uint8 thisOne = uint8(seed % 2);
@@ -109,7 +118,6 @@ contract Poem is ERC721A, Ownable {
         address to = msg.sender;
         require(_totalMinted() < MAX_NUM_NFTS, "Out of tokens.");
         require(_numberMinted(to) == 0, "You can only mint 1 token.");
-        require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
         _mint(to, 1);
     }
 
@@ -246,6 +254,9 @@ contract Poem is ERC721A, Ownable {
             if (currStep < MAX_NUM_NFTS) {
                 takeNextStep(startTokenId);
             }
+        } else {
+            // If we're not burning, the receiver can only hold 3 tokens at a time.
+            require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
         }
     }
 
@@ -317,10 +328,16 @@ contract Poem is ERC721A, Ownable {
 
         // 2. Take a pseudorandom walk to a place we could be
         for (uint8 i = nonZeroStep; i < currStep; i++) {
-            if (fromSeed % 2 == 0) {
-                currIndex = _getLeftChild(currIndex);
+            uint8 leftChild = _getLeftChild(currIndex);
+            uint8 rightChild = _getRightChild(currIndex);
+            if (leftChild == 0) {
+                currIndex = rightChild;
+            } else if (rightChild == 0) {
+                currIndex = leftChild;
+            } else if (fromSeed % 2 == 0) {
+                currIndex = leftChild;
             } else {
-                currIndex = _getRightChild(currIndex);
+                currIndex = rightChild;
             }
             fromSeed >> 1;
         }
@@ -357,10 +374,20 @@ contract Poem is ERC721A, Ownable {
 
         uint8 currIndex = _getCurrIndex(uint160(info.addr));
         currStep += 1;
+        uint8 leftChild = _getLeftChild(currIndex);
+        uint8 rightChild = _getRightChild(currIndex);
         if (seed <= leftMax) {
-            path[currStep] = _getLeftChild(currIndex);
+            if (leftChild > 0) {
+                path[currStep] = leftChild;
+            } else {
+                path[currStep] = rightChild;
+            }
         } else if (seed <= rightMax) {
-            path[currStep] = _getRightChild(currIndex);
+            if (rightChild > 0) {
+                path[currStep] = rightChild;
+            } else {
+                path[currStep] = leftChild;
+            }
         } else if (seed <= jitterMax) {
             path[currStep] = _getJitterChild(currIndex, historicalSeed >> 30);
         }

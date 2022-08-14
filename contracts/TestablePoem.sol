@@ -128,4 +128,8 @@ contract TestablePoem is Poem("Poem", "POEM") {
     function getNodes() public view returns (uint256[26] memory) {
         return nodes;
     }
+
+    function getPath() public view returns (uint8[9] memory) {
+        return path;
+    }
 }
