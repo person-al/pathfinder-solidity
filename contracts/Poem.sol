@@ -6,41 +6,41 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Poem is ERC721A, Ownable {
-    uint8 public constant MAX_NUM_SIBLINGS = 4;
+    uint8 public constant MAX_NUM_JITTERS = 3;
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
-    uint256 private constant VALUE_FILTER = 0x000000ffffffffffffffffffffffffff;
+    uint256 private constant VALUE_FILTER = 0x00000fffffffffffffffffffffffffff;
 
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
     uint256[26] internal nodes = [
-        0x0000000000000000000000000000000000000000000000000000000000000000,
-        0x0203000000000000000000000000000000000000000000000000417320686520,
-        0x0405000000030000000000000000000000000000000000007265616368656420,
-        0x05060000000200000000000000000000000000000000000064726f7070656420,
-        0x0708000006050000000000000000000000000000000000007570776172647320,
-        0x080900000604000000000000000000000000000000006869732068616e647320,
-        0x090a000005040000000000000000000000000000000000686973206579657320,
-        0x0b0c000a090800000000000000000000000000000000006a6f796f75736c792c,
-        0x0c0d000a0907000000000000000000000000746f2074686520636c6f7564732c,
-        0x0d0e000a080700000000000000000000000000000000000000007368796c792c,
-        0x0e0f000908070000000000000000746f7761726473206869732073686f65732c,
-        0x00100f0e0d0c0000000000000000000000000000000000007468652073756e20,
-        0x10110f0e0d0b00000000000000000000000000000000007468652077696e6420,
-        0x11120f0e0c0b0000000000000000000000000074686520666f6f747374657073,
-        0x12130f0d0c0b0000000000007468756e6465726f7573206c6175676874657220,
-        0x13000e0d0c0b000000000000007477696e6b6c696e6720666561747572657320,
-        0x00140013121100000000000000000000000000000000626f6973746572656420,
-        0x1415001312100000000000000000000000000000000000617373756167656420,
-        0x151600131110000000000000000000000000000000006563686f656420696e20,
-        0x1600001211100000000000000000000000000000000000006272757368656420,
-        0x00170000161500000000000000000000686973206578636974656d656e742e20,
-        0x1718000016140000000000000000000000000000006869732066656172732e20,
-        0x1800000015140000000000000000000000000000000068697320656172732e20,
-        0x00190000001800000000000000000000000000486973207374727567676c6520,
-        0x19000000001700000000000000000000000048697320616476656e7475726520,
-        0x00000000000000000000000000776173206a75737420626567696e6e696e672e
+        0,
+        909926238360867929735398212882603035651154206890943763432627265628419941664,
+        1818085630288831225152556248451971318888503523798382480318670550428524307488,
+        2272165325726251414518349332747065322088826020657626361753819989959403463712,
+        3180324987148369089773348128288666447838811641617614208638020369611860767520,
+        3634404682585789279139141212583760451039134138476858583137030637339093005088,
+        4088484324313940717540769080940660335567536152699603319147880213682479002400,
+        4996747404196785874318577405850053296304456278064491127104770402649314720044,
+        5450827099634206063684370490145147299504781136487619317955575716192681489196,
+        5904906741362357502085998358502047184033180789146480233733645486516586969388,
+        6358972633517708693661330946681262831505134165285174307704094589306752299820,
+        28401173286392137062282498244147996712585788310297368222521403865233190432,
+        7267042491568102673472288079791435007277491848695276522382272216462879777824,
+        7721122187005522862838081164086529010477814354777295948860271258278308442227,
+        8175201828733674301239709033108001331624392849233692055307543228010251776544,
+        8594068814520393617499124365727618858396950975904160398476206872204241367840,
+        35337536625952488945442353345468866105503576651487143313660503028163503136,
+        9083360762342544255095990558673540698909844224853249164312911225587916694560,
+        9537440457779964444461783642968634702110166721712493522744180277778267598368,
+        9950883237096986387747710946149794462226042099961420753510984315443664479264,
+        40637485017397839625788323267119790410909743057208080281411575484228316704,
+        10445599846969808156496454824392134265572084798328785506672366718191527996960,
+        10855508368420576029336595138616605997968481005738390565983096147756436368928,
+        44171176619459608239582437518572962895687103158953280726063294786640307488,
+        11307821214581659709333104004754678501295898408692039780574742603076044219680,
+        2662277745920782326914498756153016221122324270
     ];
     uint256 private immutable _deployedBlockNumber;
 
@@ -48,71 +48,19 @@ contract Poem is ERC721A, Ownable {
         _deployedBlockNumber = block.number;
     }
 
+    // ========= VALIDATION =========
     function indexIsValid(uint256 _index) internal pure {
         require(_index > 0, "Use a positive, non-zero index for your nodes.");
         require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
     }
 
-    function _getNode(uint8 index) internal view returns (bytes32) {
-        return bytes32(nodes[index]);
-    }
+    // ========= ADMIN ONLY =========
+    // withdraw funds
 
-    function _getLeftChild(uint8 index) internal view returns (uint8) {
-        indexIsValid(index);
-        return uint8(_getNode(index)[0]);
-    }
+    // ========= PUBLIC FUNCTIONS =========
+    // mint, burn, transfer, royalty
 
-    function _getRightChild(uint8 index) internal view returns (uint8) {
-        indexIsValid(index);
-        return uint8(_getNode(index)[1]);
-    }
-
-    function _getValueBytes(uint8 index) internal view returns (bytes32) {
-        indexIsValid(index);
-        return _getNode(index) & bytes32(VALUE_FILTER);
-    }
-
-    function _getSiblings(uint8 index) internal view returns (uint8[4] memory) {
-        indexIsValid(index);
-        uint8[4] memory siblings;
-        bytes32 node = _getNode(index);
-        for (uint8 i = 0; i < MAX_NUM_SIBLINGS; i++) {
-            uint8 sib = uint8(node[2 + i]);
-            siblings[i] = sib;
-        }
-        return siblings;
-    }
-
-    function _getJitterChild(uint8 index, uint256 seed) internal view returns (uint8) {
-        indexIsValid(index);
-
-        uint8 left = _getLeftChild(index);
-        uint8 right = _getRightChild(index);
-        uint8[4] memory siblings = [0, 0, 0, 0];
-        if (left > 0) {
-            siblings = _getSiblings(left);
-        } else if (right > 0) {
-            siblings = _getSiblings(right);
-        } else {
-            // TODO: emit an error?
-            console.log("this isn't possible. How did we get here?");
-            return 0;
-        }
-        // "jittering" should usually take us off the expected path.
-        for (uint8 i = 0; i < MAX_NUM_SIBLINGS; i++) {
-            uint8 thisOne = uint8(seed % 2);
-            uint8 sib = siblings[i];
-            if (thisOne == 1 && sib != right && sib > 0) {
-                return sib;
-            }
-            seed = seed >> 1;
-        }
-        // but sometimes, we stay on the path
-        if (seed % 2 == 1) {
-            return left;
-        }
-        return right;
-    }
+    // TODO: royalty function
 
     function mint() public {
         address to = msg.sender;
@@ -121,25 +69,54 @@ contract Poem is ERC721A, Ownable {
         _mint(to, 1);
     }
 
-    // TODO: prevent transferring to contracts
+    /**
+     * @dev Burns `tokenId`. See {ERC721A-_burn}.
+     *
+     * Requirements:
+     *
+     * - The caller must own `tokenId` or be an approved operator.
+     */
+    function burn(uint256 tokenId) public {
+        _burn(tokenId, true);
+    }
 
-    function _newHistoricalInput(
-        uint256 currInput,
-        uint256 from,
-        uint256 to,
-        uint256 difficulty,
-        uint256 blockNumber
-    ) internal pure returns (uint256) {
-        // We're okay with an overflow or underflow here.
-        // This is about storing the "essence" of history, not keep an accurate record.
-        unchecked {
-            uint256 part1 = uint160(from) + difficulty;
-            uint256 part2 = uint160(to) + blockNumber;
-            if (part1 > part2) {
-                return currInput + part1 - part2;
-            } else {
-                return currInput + part2 - part1;
+    // ========= HOOKS=========
+    // beforeTransfer, afterTransfer
+
+    // TODO: prevent transferring to contracts? Or does it matter? Do I have a re-entrancy risk here?
+
+    /**
+     * @dev Hook that is called before a set of serially-ordered token IDs
+     * are about to be transferred. This includes minting.
+     * And also called before burning one token.
+     *
+     * `startTokenId` - the first token ID to be transferred.
+     * `quantity` - the amount to be transferred.
+     *
+     * Calling conditions:
+     *
+     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be
+     * transferred to `to`.
+     * - When `from` is zero, `tokenId` will be minted for `to`.
+     * - When `to` is zero, `tokenId` will be burned by `from`.
+     * - `from` and `to` are never both zero.
+     */
+    function _beforeTokenTransfers(
+        address,
+        address to,
+        uint256 startTokenId,
+        uint256
+    ) internal override {
+        // If we're burning the token and we're not done, take the next step.
+        // Note that calling this in _beforeTokenTransfers instead of in the public burn function
+        // ensures that the owner check on burning happens BEFORE we take the step.
+        if (uint160(to) == 0) {
+            if (currStep < MAX_NUM_NFTS) {
+                takeNextStep(startTokenId);
             }
+        } else {
+            // If we're not burning, the receiver can only hold 3 tokens at a time.
+            require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
         }
     }
 
@@ -178,12 +155,36 @@ contract Poem is ERC721A, Ownable {
             //      Instead, we'll store the difference between this block and the deploy block.
             //      That's enough bits to store roughly 77M centuries
             //      from deployment, if I'm counting correctly.
-            uint64 MAX_VAL = 18446744073709551615;
+            uint64 maxVal = 18446744073709551615;
             uint256 newBlockNumber = block.number - _deployedBlockNumber;
-            if (newBlockNumber >= MAX_VAL) {
-                _setAux(to, MAX_VAL);
+            if (newBlockNumber >= maxVal) {
+                _setAux(to, maxVal);
             } else {
                 _setAux(to, uint64(newBlockNumber));
+            }
+        }
+    }
+
+    // ========= MODIFYING INTERNAL DATA =========
+    // storing owner count, transfer blockstamp, historical data,
+    // taking the next step in our poem path
+
+    function _newHistoricalInput(
+        uint256 currInput,
+        uint256 from,
+        uint256 to,
+        uint256 difficulty,
+        uint256 blockNumber
+    ) internal pure returns (uint256) {
+        // We're okay with an overflow or underflow here.
+        // This is about storing the "essence" of history, not keep an accurate record.
+        unchecked {
+            uint256 part1 = uint160(from) + difficulty;
+            uint256 part2 = uint160(to) + blockNumber;
+            if (part1 > part2) {
+                return currInput + part1 - part2;
+            } else {
+                return currInput + part2 - part1;
             }
         }
     }
@@ -212,136 +213,17 @@ contract Poem is ERC721A, Ownable {
             return previousExtraData;
         }
 
-        uint24 MAX_VAL = 16777215;
+        uint24 maxVal = 16777215;
         uint32 numOwnersHad;
         unchecked {
             // This will never overflow bc previousExtraData is a uint24 and numOwnersHad is a uint32.
             numOwnersHad = previousExtraData + 1;
         }
-        if (numOwnersHad >= MAX_VAL) {
-            return MAX_VAL;
+        if (numOwnersHad >= maxVal) {
+            return maxVal;
         } else {
             return uint24(numOwnersHad);
         }
-    }
-
-    /**
-     * @dev Hook that is called before a set of serially-ordered token IDs
-     * are about to be transferred. This includes minting.
-     * And also called before burning one token.
-     *
-     * `startTokenId` - the first token ID to be transferred.
-     * `quantity` - the amount to be transferred.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, `tokenId` will be burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
-    function _beforeTokenTransfers(
-        address,
-        address to,
-        uint256 startTokenId,
-        uint256
-    ) internal override {
-        // If we're burning the token and we're not done, take the next step.
-        // Note that calling this in _beforeTokenTransfers instead of in the public burn function
-        // ensures that the owner check on burning happens BEFORE we take the step.
-        if (uint160(to) == 0) {
-            if (currStep < MAX_NUM_NFTS) {
-                takeNextStep(startTokenId);
-            }
-        } else {
-            // If we're not burning, the receiver can only hold 3 tokens at a time.
-            require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
-        }
-    }
-
-    /**
-     * @dev Burns `tokenId`. See {ERC721A-_burn}.
-     *
-     * Requirements:
-     *
-     * - The caller must own `tokenId` or be an approved operator.
-     */
-    function burn(uint256 tokenId) public {
-        _burn(tokenId, true);
-    }
-
-    function _opacityLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
-        uint256 estNumMonthsHeld = numBlocksHeld / (7000 * 30);
-        if (estNumMonthsHeld < 4) {
-            return 0;
-        } else if (estNumMonthsHeld >= 4 && estNumMonthsHeld < 5) {
-            return 5;
-        } else if (estNumMonthsHeld >= 5 && estNumMonthsHeld < 6) {
-            return 10;
-        } else if (estNumMonthsHeld >= 6 && estNumMonthsHeld < 7) {
-            return 15;
-        } else if (estNumMonthsHeld >= 7 && estNumMonthsHeld < 8) {
-            return 20;
-        } else if (estNumMonthsHeld >= 8 && estNumMonthsHeld < 9) {
-            return 40;
-        } else if (estNumMonthsHeld >= 9 && estNumMonthsHeld < 10) {
-            return 60;
-        } else if (estNumMonthsHeld >= 10 && estNumMonthsHeld < 11) {
-            return 80;
-        } else {
-            return 100;
-        }
-    }
-
-    function _jitterLevel(uint24 numOwners) internal pure returns (uint8) {
-        if (numOwners < 5) {
-            return 0;
-        } else if (numOwners >= 5 && numOwners < 10) {
-            return 10;
-        } else if (numOwners >= 10 && numOwners < 20) {
-            return 15;
-        } else if (numOwners >= 20 && numOwners < 30) {
-            return 20;
-        } else if (numOwners >= 30 && numOwners < 40) {
-            return 25;
-        } else {
-            return 30;
-        }
-    }
-
-    function _getCurrIndex(uint160 fromSeed) internal view returns (uint8) {
-        // If our currIndex is non-zero, return it.
-        uint8 currIndex = path[currStep];
-        if (currIndex != 0) {
-            return currIndex;
-        }
-
-        // If we had an opacity issue and don't know where we are,
-        // pick a random place we _could_ be to decide where to go next.
-        // 1. Figure out the last time we had a value
-        uint8 nonZeroStep = currStep;
-        while (currIndex == 0 && nonZeroStep > 0) {
-            nonZeroStep -= 1;
-            currIndex = path[nonZeroStep];
-        }
-
-        // 2. Take a pseudorandom walk to a place we could be
-        for (uint8 i = nonZeroStep; i < currStep; i++) {
-            uint8 leftChild = _getLeftChild(currIndex);
-            uint8 rightChild = _getRightChild(currIndex);
-            if (leftChild == 0) {
-                currIndex = rightChild;
-            } else if (rightChild == 0) {
-                currIndex = leftChild;
-            } else if (fromSeed % 2 == 0) {
-                currIndex = leftChild;
-            } else {
-                currIndex = rightChild;
-            }
-            fromSeed >> 1;
-        }
-        return currIndex;
     }
 
     function takeNextStep(uint256 tokenId) private {
@@ -377,21 +259,139 @@ contract Poem is ERC721A, Ownable {
         uint8 leftChild = _getLeftChild(currIndex);
         uint8 rightChild = _getRightChild(currIndex);
         if (seed <= leftMax) {
-            if (leftChild > 0) {
-                path[currStep] = leftChild;
-            } else {
-                path[currStep] = rightChild;
-            }
+            path[currStep] = _preferNonZeroVal(leftChild, rightChild, leftChild);
         } else if (seed <= rightMax) {
-            if (rightChild > 0) {
-                path[currStep] = rightChild;
-            } else {
-                path[currStep] = leftChild;
-            }
+            path[currStep] = _preferNonZeroVal(leftChild, rightChild, rightChild);
         } else if (seed <= jitterMax) {
             path[currStep] = _getJitterChild(currIndex, historicalSeed >> 30);
         }
         // else, it's in the "hiddenPercentage" zone and we don't pick a child
         return;
+    }
+
+    // ========= INTERNAL GETTERS =========
+
+    function _getNode(uint8 index) internal view returns (bytes32) {
+        return bytes32(nodes[index]);
+    }
+
+    function _getLeftChild(uint8 index) internal view returns (uint8) {
+        indexIsValid(index);
+        return uint8(_getNode(index)[0]);
+    }
+
+    function _getRightChild(uint8 index) internal view returns (uint8) {
+        indexIsValid(index);
+        return uint8(_getNode(index)[1]);
+    }
+
+    function _getValueBytes(uint8 index) internal view returns (bytes32) {
+        indexIsValid(index);
+        return _getNode(index) & bytes32(VALUE_FILTER);
+    }
+
+    function _getJitterKids(uint8 index) internal view returns (uint8[3] memory) {
+        indexIsValid(index);
+        uint8[3] memory jitters;
+        bytes32 node = _getNode(index);
+        for (uint8 i = 0; i < MAX_NUM_JITTERS; i++) {
+            jitters[i] = uint8(node[2 + i]);
+        }
+        return jitters;
+    }
+
+    function _preferNonZeroVal(
+        uint8 option1,
+        uint8 option2,
+        uint8 preferred
+    ) private pure returns (uint8) {
+        if (preferred > 0) {
+            return preferred;
+        } else if (option1 > 0) {
+            return option1;
+        }
+        return option2;
+    }
+
+    function _getJitterChild(uint8 index, uint256 seed) internal view returns (uint8) {
+        indexIsValid(index);
+
+        uint8[3] memory jitters = _getJitterKids(index);
+        // "jittering" should usually take us off the expected path.
+        for (uint8 i = 0; i < MAX_NUM_JITTERS; i++) {
+            uint8 thisOne = uint8(seed % 2);
+            uint8 j = jitters[i];
+            if (thisOne == 1 && j > 0) {
+                return j;
+            }
+            seed = seed >> 1;
+        }
+        // but sometimes, we stay on the path
+        uint8 left = _getLeftChild(index);
+        uint8 right = _getRightChild(index);
+        if (seed % 2 == 1) {
+            return _preferNonZeroVal(left, right, left);
+        }
+        return _preferNonZeroVal(left, right, right);
+    }
+
+    function _opacityLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
+        uint256 estNumMonthsHeld = numBlocksHeld / (7000 * 30);
+        if (estNumMonthsHeld <= 4) {
+            return 0;
+        } else if (estNumMonthsHeld <= 12) {
+            return uint8(12 * estNumMonthsHeld - 54);
+        }
+        return 100;
+    }
+
+    function _jitterLevel(uint24 numOwners) internal pure returns (uint8) {
+        if (numOwners < 5) {
+            return 0;
+        } else if (numOwners < 10) {
+            return 10;
+        } else if (numOwners < 20) {
+            return 15;
+        } else if (numOwners < 30) {
+            return 20;
+        } else if (numOwners < 40) {
+            return 25;
+        } else {
+            return 30;
+        }
+    }
+
+    /**
+     * Return the index of the node we're currently on. If our current node is
+     * "hidden", return a node we _could_ be on.
+     */
+    function _getCurrIndex(uint160 fromSeed) internal view returns (uint8) {
+        // If our currIndex is non-zero, return it.
+        uint8 currIndex = path[currStep];
+        if (currIndex != 0) {
+            return currIndex;
+        }
+
+        // If we had an opacity issue and don't know where we are,
+        // pick a random place we _could_ be to decide where to go next.
+        // 1. Figure out the last time we had a value
+        uint8 nonZeroStep = currStep;
+        while (currIndex == 0 && nonZeroStep > 0) {
+            nonZeroStep -= 1;
+            currIndex = path[nonZeroStep];
+        }
+
+        // 2. Take a pseudorandom walk to a place we could be
+        for (uint8 i = nonZeroStep; i < currStep; i++) {
+            uint8 leftChild = _getLeftChild(currIndex);
+            uint8 rightChild = _getRightChild(currIndex);
+            if (fromSeed % 2 == 0) {
+                currIndex = _preferNonZeroVal(leftChild, rightChild, leftChild);
+            } else {
+                currIndex = _preferNonZeroVal(leftChild, rightChild, rightChild);
+            }
+            fromSeed >> 1;
+        }
+        return currIndex;
     }
 }

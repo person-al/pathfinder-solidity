@@ -265,7 +265,7 @@ export function shouldBehaveLikePoem(): void {
             );
           await this.poem.connect(this.signers.others[i]).burn(i);
         }
-        // Now mint the 4th token. It has 4 kids to choose from when jittering
+        // Now mint the 4th token. It has 3 kids to choose from when jittering
         await this.poem.connect(this.signers.admin).mint();
         // pass it back and forth 8 times so that jitterLevel is 10
         const fromUser = [this.signers.admin, this.signers.user];
@@ -278,7 +278,7 @@ export function shouldBehaveLikePoem(): void {
         }
       });
 
-      it("left", async function () {
+      it("right", async function () {
         // If we chose left, we should be at node 7 right now.
         expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
         expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
@@ -290,7 +290,7 @@ export function shouldBehaveLikePoem(): void {
         // The token has been minted and was passed around the owner number is 8.
         // This means a 10% jitter likelihood. Values are currently: [45,90,100]
         // So in order to jitter I need seed % 100 > 90
-        // The siblings list will be 15, 14, 13, 12, (11 is left)
+        // The siblings list will be 15, 14, 13, 11, 12
         // Then inside the jitter function, I need it to go 0,0,0,0,1
         // So the final 5 bits are 10000
         await this.poem
@@ -299,13 +299,13 @@ export function shouldBehaveLikePoem(): void {
             BigInt("96230537732805810709003998350712726735510319204374157684181885535773934182995") -
               BigInt(this.signers.admin.address),
           );
-        // so now if we burn, the next step should be 11
+        // so now if we burn, the next step should be 12
         await this.poem.connect(this.signers.admin).burn(3);
         expect(await this.poem.currStep()).to.equal(4);
-        expect(await this.poem.path(4)).to.equal(11);
+        expect(await this.poem.path(4)).to.equal(12);
       });
 
-      it("right", async function () {
+      it("left", async function () {
         // If we chose left, we should be at node 7 right now.
         expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(3);
         expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
@@ -315,7 +315,7 @@ export function shouldBehaveLikePoem(): void {
         expect(await this.poem.connect(this.signers.admin).getCurrentPathIndex()).to.equal(7);
 
         // I need seed % 100 > 80
-        // The siblings list will be 15, 14, 13, 12, (11 is left)
+        // The siblings list will be 15, 14, 13, 11, 12
         // Then inside the jitter function, I need it to go 0,0,0,1,0
         // So the final 5 bits are 10000
         await this.poem
@@ -327,7 +327,7 @@ export function shouldBehaveLikePoem(): void {
         // so now if we burn, the next step should be 11
         await this.poem.connect(this.signers.admin).burn(3);
         expect(await this.poem.currStep()).to.equal(4);
-        expect(await this.poem.path(4)).to.equal(12);
+        expect(await this.poem.path(4)).to.equal(11);
       });
 
       it("sibling 1", async function () {
