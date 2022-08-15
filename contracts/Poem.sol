@@ -18,7 +18,9 @@ contract Poem is ERC721A, Ownable, IERC2981 {
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
     uint256 private constant VALUE_FILTER = 0x00000fffffffffffffffffffffffffff;
-    uint256 public immutable MINT_FEE; // In wei
+
+    uint256 public immutable _mintFee; // In wei
+    uint256 private immutable _deployedBlockNumber;
 
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
@@ -51,7 +53,6 @@ contract Poem is ERC721A, Ownable, IERC2981 {
         11307821214581659709333104004754678501295898408692039780574742603076044219680,
         2662277745920782326914498756153016221122324270
     ];
-    uint256 private immutable _deployedBlockNumber;
 
     /**
      * _mintPrice is denominated in wei
@@ -63,7 +64,7 @@ contract Poem is ERC721A, Ownable, IERC2981 {
         uint256 _mintPrice
     ) ERC721A(name_, symbol_) {
         _deployedBlockNumber = block.number;
-        MINT_FEE = _mintPrice;
+        _mintFee = _mintPrice;
     }
 
     // ========= VALIDATION =========
@@ -96,9 +97,9 @@ contract Poem is ERC721A, Ownable, IERC2981 {
 
     function mint(bool plusTip) external payable {
         if (plusTip) {
-            require(msg.value >= MINT_FEE, "Wrong price");
+            require(msg.value >= _mintFee, "Wrong price");
         } else {
-            require(msg.value == MINT_FEE, "Wrong price");
+            require(msg.value == _mintFee, "Wrong price");
         }
         address to = msg.sender;
         require(_totalMinted() < MAX_NUM_NFTS, "Out of tokens.");
