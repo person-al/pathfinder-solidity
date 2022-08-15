@@ -1,6 +1,19 @@
+## TODOs
+
+- [ ] determine token metadata and SVG rendering
+- [ ] see where we can save on gas
+- [ ] finish all unit tests
+- [ ] deploy on testnet
+- [ ] make licensing clear
+- [ ] improve README
+- [ ] create website homepage (optional)
+- [ ] update repo name
+- [ ] deploy on mainnet
+
 ## 2022-08-15
 
 - Adding housekeeping functionality: mint price, royalties, etc.
+- a bad attempt at updating the README
 
 ### Gas usage
 
