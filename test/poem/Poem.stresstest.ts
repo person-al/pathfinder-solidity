@@ -95,7 +95,7 @@ export function shouldStressWithoutProblems(): void {
                 // console.log("User has minted before");
                 break;
               }
-              await this.poem.connect(randomUser).mint();
+              await this.poem.connect(randomUser).mint(false);
               const a = userToToken.get(randomUser) || [];
               a.push(currToken);
               userToToken.set(randomUser, a);

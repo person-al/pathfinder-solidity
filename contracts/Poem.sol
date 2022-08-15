@@ -4,12 +4,21 @@ pragma solidity >=0.8.4;
 import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
-contract Poem is ERC721A, Ownable {
+interface IERC2981 {
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount);
+}
+
+contract Poem is ERC721A, Ownable, IERC2981 {
     uint8 public constant MAX_NUM_JITTERS = 3;
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
     uint256 private constant VALUE_FILTER = 0x00000fffffffffffffffffffffffffff;
+    uint256 public immutable MINT_FEE; // In wei
 
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
@@ -44,8 +53,17 @@ contract Poem is ERC721A, Ownable {
     ];
     uint256 private immutable _deployedBlockNumber;
 
-    constructor(string memory name_, string memory symbol_) ERC721A(name_, symbol_) {
+    /**
+     * _mintPrice is denominated in wei
+     *
+     */
+    constructor(
+        string memory name_,
+        string memory symbol_,
+        uint256 _mintPrice
+    ) ERC721A(name_, symbol_) {
         _deployedBlockNumber = block.number;
+        MINT_FEE = _mintPrice;
     }
 
     // ========= VALIDATION =========
@@ -54,19 +72,38 @@ contract Poem is ERC721A, Ownable {
         require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
     }
 
-    // ========= ADMIN ONLY =========
-    // withdraw funds
+    // ========= PAYMENTS =========
+    // withdraw funds, royalties
+
+    function withdrawAllEth() external {
+        payable(owner()).transfer(address(this).balance);
+    }
+
+    function withdrawAllERC20(IERC20 _erc20Token) external {
+        _erc20Token.transfer(owner(), _erc20Token.balanceOf(address(this)));
+    }
+
+    function supportsInterface(bytes4 _interfaceId) public view override returns (bool) {
+        return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (owner(), _salePrice / 100);
+    }
 
     // ========= PUBLIC FUNCTIONS =========
-    // mint, burn, transfer, royalty
+    // mint, burn
 
-    // TODO: royalty function
-
-    function mint() public {
+    function mint(bool plusTip) external payable {
+        if (plusTip) {
+            require(msg.value >= MINT_FEE, "Wrong price");
+        } else {
+            require(msg.value == MINT_FEE, "Wrong price");
+        }
         address to = msg.sender;
         require(_totalMinted() < MAX_NUM_NFTS, "Out of tokens.");
         require(_numberMinted(to) == 0, "You can only mint 1 token.");
-        _mint(to, 1);
+        _safeMint(to, 1);
     }
 
     /**
@@ -76,14 +113,15 @@ contract Poem is ERC721A, Ownable {
      *
      * - The caller must own `tokenId` or be an approved operator.
      */
-    function burn(uint256 tokenId) public {
+    function burn(uint256 tokenId) external {
         _burn(tokenId, true);
     }
 
     // ========= HOOKS=========
     // beforeTransfer, afterTransfer
 
-    // TODO: prevent transferring to contracts? Or does it matter? Do I have a re-entrancy risk here?
+    // TODO: prevent transferring to contracts? Or does it matter?
+    // TODO: Do I have a re-entrancy risk on minting, burning, or transferring?
 
     /**
      * @dev Hook that is called before a set of serially-ordered token IDs
@@ -317,7 +355,7 @@ contract Poem is ERC721A, Ownable {
         indexIsValid(index);
 
         uint8[3] memory jitters = _getJitterKids(index);
-        // "jittering" should usually take us off the expected path.
+        // "jittering" usually takes us off the expected path.
         for (uint8 i = 0; i < MAX_NUM_JITTERS; i++) {
             uint8 thisOne = uint8(seed % 2);
             uint8 j = jitters[i];
