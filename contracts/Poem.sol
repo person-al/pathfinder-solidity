@@ -17,7 +17,7 @@ contract Poem is ERC721A, Ownable, IERC2981 {
     uint8 public constant MAX_NUM_JITTERS = 3;
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
-    uint256 private constant VALUE_FILTER = 0x00000fffffffffffffffffffffffffff;
+    uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     uint256 public immutable _mintFee; // In wei
     uint256 private immutable _deployedBlockNumber;

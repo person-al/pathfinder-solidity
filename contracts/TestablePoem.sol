@@ -96,6 +96,10 @@ contract TestablePoem is Poem("Poem", "POEM", 0) {
         return _getValueBytes(index);
     }
 
+    function getValueString(uint8 index) public view returns (string memory) {
+        return bytes32ToString(getValueBytes(index));
+    }
+
     function getRightChild(uint8 index) public view returns (uint8) {
         return _getRightChild(index);
     }
@@ -159,5 +163,24 @@ contract TestablePoem is Poem("Poem", "POEM", 0) {
         packNode(23, "His struggle ", 0, 25, [0, 0, 0]);
         packNode(24, "His adventure ", 25, 0, [0, 0, 0]);
         packNode(25, "was just beginning.", 0, 0, [0, 0, 0]);
+    }
+
+    function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {
+        uint8 numNonZeroBytes = 0;
+        for (uint8 i = 0; i < 32; i++) {
+            if (_bytes32[i] != 0) {
+                numNonZeroBytes++;
+            }
+        }
+
+        bytes memory bytesArray = new bytes(numNonZeroBytes);
+        uint8 bytesArrayIndex = 0;
+        for (uint8 k = 0; k < 32; k++) {
+            if (_bytes32[k] != 0) {
+                bytesArray[bytesArrayIndex] = _bytes32[k];
+                bytesArrayIndex++;
+            }
+        }
+        return string(bytesArray);
     }
 }
