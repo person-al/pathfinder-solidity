@@ -22,7 +22,8 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     uint256 public immutable _mintFee; // In wei
     uint256 private immutable _deployedBlockNumber;
 
-    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25]; // Does the order matter? Should I define these near the other uint8s?
+    // Does the order matter? Should I define these near the other uint8s?
+    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
     uint256[26] internal nodes = [

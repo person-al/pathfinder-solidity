@@ -1,6 +1,7 @@
 //SPDX-License-Identifier: MIT
 pragma solidity >=0.8.12;
 
+/* solhint-disable quotes */
 abstract contract RenderableMetadata {
     uint256 private indexLocation = 0x15242633353742444648515355575962646668737577848695000000000000;
 
@@ -37,6 +38,7 @@ abstract contract RenderableMetadata {
     }
 
     function renderDiamond(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
+        /* solhint-disable max-line-length */
         string
             memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18;color:#a9a9a9;height:100%;overflow:auto;} .nodeSelected{font-size:18;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
         for (uint8 i = 1; i <= 25; i++) {
@@ -51,6 +53,7 @@ abstract contract RenderableMetadata {
     }
 
     function renderLine(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
+        /* solhint-disable max-line-length */
         string
             memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.sentence{font-size:70;color:white;height:100%;overflow:auto;}</style>';
         string memory sentence = "";
@@ -58,10 +61,10 @@ abstract contract RenderableMetadata {
             uint8 index = path[i];
             sentence = string.concat(sentence, getNodeText(_getValueBytes(index), i, currStep, index == 0));
         }
-        string memory sentenceWrapped = svg.wrapText(
+        string memory sentenceWrapped = Svg.wrapText(
             sentence,
-            svg.prop("class", "sentence"),
-            string.concat(svg.prop("x", "30"), svg.prop("y", "20"), svg.prop("width", "760"), svg.prop("height", "760"))
+            Svg.prop("class", "sentence"),
+            string.concat(Svg.prop("x", "30"), Svg.prop("y", "20"), Svg.prop("width", "760"), Svg.prop("height", "760"))
         );
         return string.concat(returnVal, sentenceWrapped);
     }
@@ -97,14 +100,14 @@ abstract contract RenderableMetadata {
         uint256 column
     ) private pure returns (string memory) {
         return
-            svg.wrapText(
+            Svg.wrapText(
                 value,
-                svg.prop("class", getTextClass(pathVal, currStep, index, row)),
+                Svg.prop("class", getTextClass(pathVal, currStep, index, row)),
                 string.concat(
-                    svg.prop("x", uint2str(column * 80 - 40)),
-                    svg.prop("y", uint2str(row * 75)),
-                    svg.prop("width", "130"),
-                    svg.prop("height", "60")
+                    Svg.prop("x", uint2str(column * 80 - 40)),
+                    Svg.prop("y", uint2str(row * 75)),
+                    Svg.prop("width", "130"),
+                    Svg.prop("height", "60")
                 )
             );
     }
@@ -167,7 +170,7 @@ abstract contract RenderableMetadata {
 }
 
 // These library functions are copied from the Hot Chain Svg project.
-library svg {
+library Svg {
     function text(string memory _props, string memory _children) internal pure returns (string memory) {
         return el("text", _props, _children);
     }
@@ -201,6 +204,7 @@ library Base64 {
     string internal constant TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 
     function encode(bytes memory data) internal pure returns (string memory) {
+        /* solhint-disable no-inline-assembly, no-empty-blocks */
         if (data.length == 0) return "";
 
         // load the table into memory
