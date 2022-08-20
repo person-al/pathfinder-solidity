@@ -1,10 +1,11 @@
 // SPDX-License-Identifier: UNLICENSED
-pragma solidity >=0.8.4;
+pragma solidity >=0.8.12;
 
 import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "./Renderable.sol";
 
 interface IERC2981 {
     function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
@@ -13,7 +14,7 @@ interface IERC2981 {
         returns (address receiver, uint256 royaltyAmount);
 }
 
-contract Poem is ERC721A, Ownable, IERC2981 {
+contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     uint8 public constant MAX_NUM_JITTERS = 3;
     uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
@@ -22,7 +23,7 @@ contract Poem is ERC721A, Ownable, IERC2981 {
     uint256 public immutable _mintFee; // In wei
     uint256 private immutable _deployedBlockNumber;
 
-    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
+    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25]; // Does the order matter? Should I define these near the other uint8s?
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
     uint256[26] internal nodes = [
@@ -41,7 +42,7 @@ contract Poem is ERC721A, Ownable, IERC2981 {
         7267042491568102673472288079791435007277491848695276522382272216462879777824,
         7721122187005522862838081164086529010477814354777295948860271258278308442227,
         8175201828733674301239709033108001331624392849233692055307543228010251776544,
-        8594068814520393617499124365727618858396950975904160398476206872204241367840,
+        8594068814520393617499124365727618858396950975904160398476206872148189541152,
         35337536625952488945442353345468866105503576651487143313660503028163503136,
         9083360762342544255095990558673540698909844224853249164312911225587916694560,
         9537440457779964444461783642968634702110166721712493522744180277778267598368,
@@ -93,7 +94,12 @@ contract Poem is ERC721A, Ownable, IERC2981 {
     }
 
     // ========= PUBLIC FUNCTIONS =========
-    // mint, burn
+    // mint, burn, tokenURI
+
+    function tokenURI(uint256 _tokenId) public view override returns (string memory) {
+        bool _renderDiamond = _historicalInput >> 3 % 2 == 0;
+        return _getTokenUri(_tokenId, currStep, path, _renderDiamond);
+    }
 
     function mint(bool plusTip) external payable {
         if (plusTip) {
@@ -324,7 +330,7 @@ contract Poem is ERC721A, Ownable, IERC2981 {
         return uint8(_getNode(index)[1]);
     }
 
-    function _getValueBytes(uint8 index) internal view returns (bytes32) {
+    function _getValueBytes(uint8 index) internal view override returns (bytes32) {
         indexIsValid(index);
         return _getNode(index) & bytes32(VALUE_FILTER);
     }

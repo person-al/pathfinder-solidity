@@ -145,14 +145,14 @@ contract TestablePoem is Poem("Poem", "POEM", 0) {
         packNode(5, "his hands ", 8, 9, [7, 10, 0]);
         packNode(6, "his eyes ", 9, 10, [7, 8, 0]);
         packNode(7, "joyously,", 11, 12, [13, 14, 15]);
-        packNode(8, "to the clouds,", 12, 13, [11, 14, 15]);
-        packNode(9, "shyly,", 13, 14, [11, 12, 15]);
-        packNode(10, "towards his shoes,", 14, 15, [11, 12, 13]);
+        packNode(8, "to the clouds, ", 12, 13, [11, 14, 15]);
+        packNode(9, "shyly, ", 13, 14, [11, 12, 15]);
+        packNode(10, "towards his shoes, ", 14, 15, [11, 12, 13]);
         packNode(11, "the sun ", 0, 16, [17, 18, 19]);
         packNode(12, "the wind ", 16, 17, [18, 19, 0]);
-        packNode(13, "the footsteps", 17, 18, [16, 19, 0]);
+        packNode(13, "the footsteps ", 17, 18, [16, 19, 0]);
         packNode(14, "thunderous laughter ", 18, 19, [16, 17, 0]);
-        packNode(15, "twinkling features ", 19, 0, [16, 17, 18]);
+        packNode(15, "twinkling feathers ", 19, 0, [16, 17, 18]);
         packNode(16, "boistered ", 0, 20, [21, 22, 0]);
         packNode(17, "assuaged ", 20, 21, [22, 0, 0]);
         packNode(18, "echoed in ", 21, 22, [20, 0, 0]);
@@ -163,24 +163,5 @@ contract TestablePoem is Poem("Poem", "POEM", 0) {
         packNode(23, "His struggle ", 0, 25, [0, 0, 0]);
         packNode(24, "His adventure ", 25, 0, [0, 0, 0]);
         packNode(25, "was just beginning.", 0, 0, [0, 0, 0]);
-    }
-
-    function bytes32ToString(bytes32 _bytes32) public pure returns (string memory) {
-        uint8 numNonZeroBytes = 0;
-        for (uint8 i = 0; i < 32; i++) {
-            if (_bytes32[i] != 0) {
-                numNonZeroBytes++;
-            }
-        }
-
-        bytes memory bytesArray = new bytes(numNonZeroBytes);
-        uint8 bytesArrayIndex = 0;
-        for (uint8 k = 0; k < 32; k++) {
-            if (_bytes32[k] != 0) {
-                bytesArray[bytesArrayIndex] = _bytes32[k];
-                bytesArrayIndex++;
-            }
-        }
-        return string(bytesArray);
     }
 }

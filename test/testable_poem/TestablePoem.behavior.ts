@@ -1,4 +1,3 @@
-import { equal } from "assert";
 import { expect } from "chai";
 
 export function shouldBehaveLikeTestablePoem(): void {
@@ -42,7 +41,7 @@ export function shouldBehaveLikeTestablePoem(): void {
       expect(await this.poem.connect(this.signers.admin).getValueString(12)).to.equal("the wind ");
       expect(await this.poem.connect(this.signers.admin).getValueString(13)).to.equal("the footsteps");
       expect(await this.poem.connect(this.signers.admin).getValueString(14)).to.equal("thunderous laughter ");
-      expect(await this.poem.connect(this.signers.admin).getValueString(15)).to.equal("twinkling features ");
+      expect(await this.poem.connect(this.signers.admin).getValueString(15)).to.equal("twinkling feathers ");
       expect(await this.poem.connect(this.signers.admin).getValueString(16)).to.equal("boistered ");
       expect(await this.poem.connect(this.signers.admin).getValueString(17)).to.equal("assuaged ");
       expect(await this.poem.connect(this.signers.admin).getValueString(18)).to.equal("echoed in ");
