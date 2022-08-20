@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity >=0.8.12;
 
-import "hardhat/console.sol";
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -59,11 +58,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
      * _mintPrice is denominated in wei
      *
      */
-    constructor(
-        string memory name_,
-        string memory symbol_,
-        uint256 _mintPrice
-    ) ERC721A(name_, symbol_) {
+    constructor(uint256 _mintPrice) ERC721A("PoemPathfinder", "POEM") {
         _deployedBlockNumber = block.number;
         _mintFee = _mintPrice;
     }
@@ -97,7 +92,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     // mint, burn, tokenURI
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        bool _renderDiamond = _historicalInput >> 3 % 2 == 0;
+        uint8 _renderDiamond = uint8(_historicalInput >> 3 % 2);
         return _getTokenUri(_tokenId, currStep, path, _renderDiamond);
     }
 
@@ -113,13 +108,6 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         _safeMint(to, 1);
     }
 
-    /**
-     * @dev Burns `tokenId`. See {ERC721A-_burn}.
-     *
-     * Requirements:
-     *
-     * - The caller must own `tokenId` or be an approved operator.
-     */
     function burn(uint256 tokenId) external {
         _burn(tokenId, true);
     }
@@ -130,22 +118,6 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     // TODO: prevent transferring to contracts? Or does it matter?
     // TODO: Do I have a re-entrancy risk on minting, burning, or transferring?
 
-    /**
-     * @dev Hook that is called before a set of serially-ordered token IDs
-     * are about to be transferred. This includes minting.
-     * And also called before burning one token.
-     *
-     * `startTokenId` - the first token ID to be transferred.
-     * `quantity` - the amount to be transferred.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, `tokenId` will be burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
     function _beforeTokenTransfers(
         address,
         address to,
@@ -154,7 +126,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     ) internal override {
         // If we're burning the token and we're not done, take the next step.
         // Note that calling this in _beforeTokenTransfers instead of in the public burn function
-        // ensures that the owner check on burning happens BEFORE we take the step.
+        // to ensure that the owner check on burning happens BEFORE we take the step.
         if (uint160(to) == 0) {
             if (currStep < MAX_NUM_NFTS) {
                 takeNextStep(startTokenId);
@@ -165,22 +137,6 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         }
     }
 
-    /**
-     * @dev Hook that is called after a set of serially-ordered token IDs
-     * have been transferred. This includes minting.
-     * And also called after one token has been burned.
-     *
-     * `startTokenId` - the first token ID to be transferred.
-     * `quantity` - the amount to be transferred.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` has been
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` has been minted for `to`.
-     * - When `to` is zero, `tokenId` has been burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
     function _afterTokenTransfers(
         address from,
         address to,
@@ -198,8 +154,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
             // If it's not being burned, store transfer timestamp
             //      Because we only have 64 bits, we can't store the full block number.
             //      Instead, we'll store the difference between this block and the deploy block.
-            //      That's enough bits to store roughly 77M centuries
-            //      from deployment, if I'm counting correctly.
+            //      That's enough bits to store roughly 77M centuries from deployment.
             uint64 maxVal = 18446744073709551615;
             uint256 newBlockNumber = block.number - _deployedBlockNumber;
             if (newBlockNumber >= maxVal) {
@@ -234,20 +189,6 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         }
     }
 
-    /**
-     * @dev Called during each token transfer to set the 24bit `extraData` field.
-     * Intended to be overridden by the cosumer contract.
-     *
-     * `previousExtraData` - the value of `extraData` before transfer.
-     *
-     * Calling conditions:
-     *
-     * - When `from` and `to` are both non-zero, `from`'s `tokenId` will be
-     * transferred to `to`.
-     * - When `from` is zero, `tokenId` will be minted for `to`.
-     * - When `to` is zero, `tokenId` will be burned by `from`.
-     * - `from` and `to` are never both zero.
-     */
     function _extraData(
         address,
         address to,
@@ -261,7 +202,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         uint24 maxVal = 16777215;
         uint32 numOwnersHad;
         unchecked {
-            // This will never overflow bc previousExtraData is a uint24 and numOwnersHad is a uint32.
+            // This will never overflow
             numOwnersHad = previousExtraData + 1;
         }
         if (numOwnersHad >= maxVal) {
@@ -276,7 +217,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         uint64 lastTransferBlockNumber = _getAux(info.addr);
         uint24 numOwners = info.extraData;
 
-        // Info 1: figure out opacity
+        // 1: figure out opacity
         uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
         uint8 hiddenPercentage = _opacityLevel(numBlocksHeld);
         if (hiddenPercentage == 100) {
@@ -284,19 +225,22 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
             return;
         }
 
-        // Info 2: figure out jitter
+        // 2: figure out jitter
         uint8 remainingPercentage = 100 - hiddenPercentage;
         uint8 jitterLevel = _jitterLevel(numOwners);
         uint8 jitterPercentage = uint8((uint16(remainingPercentage) * uint16(jitterLevel)) / 100);
         uint8 childPercentage = (remainingPercentage - uint8(jitterPercentage)) / 2;
 
-        // Now determine the percentage chance we pick an expected child and the chance we experience a jitter
+        // 3: Determine % chance of each outcome type
         uint8 leftMax = childPercentage;
         uint8 rightMax = 2 * childPercentage;
         uint8 jitterMax = rightMax + uint8(jitterPercentage);
 
-        // TODO: handle potential overflow
-        uint256 historicalSeed = uint256(_historicalInput + uint160(info.addr));
+        // We don't care about over/underflow.
+        uint256 historicalSeed;
+        unchecked {
+            historicalSeed = uint256(_historicalInput + uint160(info.addr));
+        }
         uint8 seed = uint8(historicalSeed % 100);
 
         uint8 currIndex = _getCurrIndex(uint160(info.addr));

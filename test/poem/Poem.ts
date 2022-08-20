@@ -32,7 +32,7 @@ async function deployPoemFixture(): Promise<{ poem: Poem }> {
   const admin: SignerWithAddress = signers[0];
 
   const poemFactory: Poem__factory = (<Poem__factory>await ethers.getContractFactory("Poem")) as Poem__factory;
-  const poem: Poem = <Poem>await poemFactory.connect(admin).deploy("Poem", "POEM", 0);
+  const poem: Poem = <Poem>await poemFactory.connect(admin).deploy(0);
   await poem.deployed();
 
   return { poem };

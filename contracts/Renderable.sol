@@ -10,10 +10,10 @@ abstract contract RenderableMetadata {
         uint256 _tokenId,
         uint8 currStep,
         uint8[9] storage path,
-        bool _renderDiamond
+        uint8 _renderDiamond
     ) internal view returns (string memory) {
         string memory svgString;
-        if (_renderDiamond) {
+        if (_renderDiamond > 0) {
             svgString = renderDiamond(path, currStep);
         } else {
             svgString = renderLine(path, currStep);
@@ -37,7 +37,6 @@ abstract contract RenderableMetadata {
     }
 
     function renderDiamond(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
-        // I can do distortion based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
         string
             memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18;color:#a9a9a9;height:100%;overflow:auto;} .nodeSelected{font-size:18;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
         for (uint8 i = 1; i <= 25; i++) {
@@ -82,9 +81,6 @@ abstract contract RenderableMetadata {
         return bytes32ToString(val);
     }
 
-    /**
-     * There are 9 total columns. node 1 is at row 0, column 4
-     */
     function nodeIndexToRowColumn(uint8 nodeIndex) private view returns (uint8[2] memory) {
         bytes1 info = bytes32(indexLocation)[nodeIndex];
         uint8 row = uint8(info >> 4);
@@ -120,14 +116,11 @@ abstract contract RenderableMetadata {
         uint256 row
     ) private pure returns (string memory) {
         if (currStep >= row - 1 && pathVal == index) {
-            // If this node was selected
             return "nodeSelected";
         }
         if (currStep >= row - 1 && pathVal == 0) {
-            // If this row is opaque
             return "nodeHidden";
         }
-        // If this node wasn't selected
         return "node";
     }
 
@@ -173,6 +166,7 @@ abstract contract RenderableMetadata {
     }
 }
 
+// These library functions are copied from the Hot Chain Svg project.
 library svg {
     function text(string memory _props, string memory _children) internal pure returns (string memory) {
         return el("text", _props, _children);
@@ -202,6 +196,7 @@ library svg {
     }
 }
 
+// This library function is copied from the WatchfacesWorld project
 library Base64 {
     string internal constant TABLE = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
 

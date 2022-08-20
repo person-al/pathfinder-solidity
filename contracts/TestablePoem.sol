@@ -4,7 +4,7 @@ pragma solidity >=0.8.4;
 import "hardhat/console.sol";
 import "./Poem.sol";
 
-contract TestablePoem is Poem("Poem", "POEM", 0) {
+contract TestablePoem is Poem(0) {
     uint16 public constant TOTAL_NUM_BITS = 256;
     uint8 public constant BITS_IN_BYTES = 8;
     uint8 public constant MAX_LEN_VALUE = 27;
