@@ -26,6 +26,7 @@
     "@types/fs-extra": "^9.0.13",
     "@types/mocha": "^9.1.1",
     "@types/node": "^18.0.6",
+    "@types/xmldom": "^0.1.31",
     "@typescript-eslint/eslint-plugin": "^5.30.7",
     "@typescript-eslint/parser": "^5.30.7",
     "chai": "^4.3.6",
@@ -89,9 +90,11 @@
     "prettier": "prettier --config ./.prettierrc.yml --write \"**/*.{js,json,md,sol,ts,yml}\"",
     "prettier:check": "prettier --check --config ./.prettierrc.yml \"**/*.{js,json,md,sol,ts,yml}\"",
     "test": "hardhat test",
-    "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain"
+    "typechain": "cross-env TS_NODE_TRANSPILE_ONLY=true hardhat typechain",
+    "svg": "npx hardhat run tasks/svg_qa/index.ts"
   },
   "dependencies": {
-    "@openzeppelin/contracts": "^4.7.2"
+    "@openzeppelin/contracts": "^4.7.2",
+    "xmldom": "^0.6.0"
   }
 }

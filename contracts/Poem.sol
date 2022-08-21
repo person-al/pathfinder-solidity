@@ -34,13 +34,13 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         3180324987148369089773348128288666447838811641617614208638020369611860767520,
         3634404682585789279139141212583760451039134138476858583137030637339093005088,
         4088484324313940717540769080940660335567536152699603319147880213682479002400,
-        4996747404196785874318577405850053296304456278064491127104770402649314720044,
-        5450827099634206063684370490145147299504781136487619317955575716192681489196,
-        5904906741362357502085998358502047184033180789146480233733645486516586969388,
-        6358972633517708693661330946681262831505134165285174307704094589306752299820,
+        4996747404196785874318577405850053296304456278064491627768569074979230526496,
+        5450827099634206063684370490145147299505383335278118719355313680067884952608,
+        5904906741362357502085998358502047184033180789146480233733677844117077961760,
+        6358972633517708693661330946683849285079837964484281646812318644041703173152,
         28401173286392137062282498244147996712585788310297368222521403865233190432,
         7267042491568102673472288079791435007277491848695276522382272216462879777824,
-        7721122187005522862838081164086529010477814354777295948860271258278308442227,
+        7721122187005522862838081164086529010477816706585060482103526844235668026144,
         8175201828733674301239709033108001331624392849233692055307543228010251776544,
         8594068814520393617499124365727618858396950975904160398476206872148189541152,
         35337536625952488945442353345468866105503576651487143313660503028163503136,
@@ -90,11 +90,15 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     }
 
     // ========= PUBLIC FUNCTIONS =========
-    // mint, burn, tokenURI
+    // mint, burn, tokenURI, SVG
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
-        uint8 _renderDiamond = uint8(_historicalInput >> 3 % 2);
-        return _getTokenUri(_tokenId, currStep, path, _renderDiamond);
+        if (!_exists(_tokenId)) revert URIQueryForNonexistentToken(); // do we want this check?
+        return _getTokenUri(_tokenId, currStep, path, shouldRenderDiamond());
+    }
+
+    function getSvg() external view returns (string memory) {
+        return _getSvg(currStep, path, shouldRenderDiamond());
     }
 
     function mint(bool plusTip) external payable {
@@ -162,6 +166,13 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
                 _setAux(to, maxVal);
             } else {
                 _setAux(to, uint64(newBlockNumber));
+            }
+        } else {
+            // If we've burning the last token, set our currStep to the end.
+            //    It's MAX_NUM_NFTs-1 because the burn counter is
+            //    incremented after this function is called
+            if (_totalBurned() == MAX_NUM_NFTS - 1) {
+                currStep = 8;
             }
         }
     }
@@ -260,6 +271,10 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     }
 
     // ========= INTERNAL GETTERS =========
+
+    function shouldRenderDiamond() internal view returns (bool) {
+        return (_historicalInput >> 3) % 2 == 1;
+    }
 
     function _getNode(uint8 index) internal view returns (bytes32) {
         return bytes32(nodes[index]);

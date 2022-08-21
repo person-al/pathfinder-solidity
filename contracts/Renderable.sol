@@ -11,19 +11,28 @@ abstract contract RenderableMetadata {
         uint256 _tokenId,
         uint8 currStep,
         uint8[9] storage path,
-        uint8 _renderDiamond
+        bool _shouldRenderDiamond
     ) internal view returns (string memory) {
-        string memory svgString;
-        if (_renderDiamond > 0) {
-            svgString = renderDiamond(path, currStep);
-        } else {
-            svgString = renderLine(path, currStep);
-        }
+        string memory svgString = _getSvg(currStep, path, _shouldRenderDiamond);
         return
             string.concat(
                 "data:application/json;base64,",
                 Base64.encode(bytes(getJSON(_tokenId, Base64.encode(bytes(svgString)))))
             );
+    }
+
+    function _getSvg(
+        uint8 currStep,
+        uint8[9] storage path,
+        bool _shouldRenderDiamond
+    ) internal view returns (string memory) {
+        string memory svgString;
+        if (_shouldRenderDiamond) {
+            svgString = renderDiamond(path, currStep);
+        } else {
+            svgString = renderLine(path, currStep);
+        }
+        return svgString;
     }
 
     function getJSON(uint256 _tokenId, string memory _imageData) public pure returns (string memory) {
@@ -40,7 +49,7 @@ abstract contract RenderableMetadata {
     function renderDiamond(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
         /* solhint-disable max-line-length */
         string
-            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18;color:#a9a9a9;height:100%;overflow:auto;} .nodeSelected{font-size:18;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
+            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18;color:#a9a9a9;height:100%;overflow:auto;} .nodeNotSelected{font-size:18;color:#555555;height:100%;overflow:auto;} .nodeSelected{font-size:18;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
         for (uint8 i = 1; i <= 25; i++) {
             bytes32 phraseBytes = _getValueBytes(i);
             uint8[2] memory dimen = nodeIndexToRowColumn(i);
@@ -49,7 +58,7 @@ abstract contract RenderableMetadata {
                 renderNodeWord(path[dimen[0] - 1], currStep, bytes32ToString(phraseBytes), i, dimen[0], dimen[1])
             );
         }
-        return returnVal;
+        return string.concat(returnVal, "</svg>");
     }
 
     function renderLine(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
@@ -59,29 +68,28 @@ abstract contract RenderableMetadata {
         string memory sentence = "";
         for (uint8 i = 0; i < 9; i++) {
             uint8 index = path[i];
-            sentence = string.concat(sentence, getNodeText(_getValueBytes(index), i, currStep, index == 0));
+            sentence = string.concat(sentence, getNodeText(i, currStep, index));
         }
         string memory sentenceWrapped = Svg.wrapText(
             sentence,
             Svg.prop("class", "sentence"),
             string.concat(Svg.prop("x", "30"), Svg.prop("y", "20"), Svg.prop("width", "760"), Svg.prop("height", "760"))
         );
-        return string.concat(returnVal, sentenceWrapped);
+        return string.concat(string.concat(returnVal, sentenceWrapped), "</svg>");
     }
 
     function getNodeText(
-        bytes32 val,
         uint8 row,
         uint8 _currStep,
-        bool isHidden
-    ) private pure returns (string memory) {
+        uint8 index
+    ) private view returns (string memory) {
         if (row > _currStep) {
             return unicode"█████";
         }
-        if (isHidden) {
+        if (index == 0) {
             return unicode"█████ ";
         }
-        return bytes32ToString(val);
+        return bytes32ToString(_getValueBytes(index));
     }
 
     function nodeIndexToRowColumn(uint8 nodeIndex) private view returns (uint8[2] memory) {
@@ -118,12 +126,19 @@ abstract contract RenderableMetadata {
         uint8 index,
         uint256 row
     ) private pure returns (string memory) {
-        if (currStep >= row - 1 && pathVal == index) {
-            return "nodeSelected";
+        if (currStep >= row - 1) {
+            if (pathVal == index) {
+                // If this node was selected
+                return "nodeSelected";
+            }
+            if (pathVal == 0) {
+                // If this row was hidden
+                return "nodeHidden";
+            }
+            // If we're passed this row and this node wasn't selected
+            return "nodeNotSelected";
         }
-        if (currStep >= row - 1 && pathVal == 0) {
-            return "nodeHidden";
-        }
+        // If this node could be selected in the future
         return "node";
     }
 

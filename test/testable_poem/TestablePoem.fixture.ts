@@ -4,7 +4,7 @@ import { ethers } from "hardhat";
 import type { TestablePoem } from "../../src/types/contracts/TestablePoem";
 import type { TestablePoem__factory } from "../../src/types/factories/contracts/TestablePoem__factory";
 
-export async function deployPoemFixture(): Promise<{ poem: TestablePoem }> {
+export async function deployTestablePoemFixture(): Promise<{ poem: TestablePoem }> {
   const signers: SignerWithAddress[] = await ethers.getSigners();
   const admin: SignerWithAddress = signers[0];
 

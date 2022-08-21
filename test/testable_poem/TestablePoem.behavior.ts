@@ -33,13 +33,13 @@ export function shouldBehaveLikeTestablePoem(): void {
       expect(await this.poem.connect(this.signers.admin).getValueString(4)).to.equal("upwards ");
       expect(await this.poem.connect(this.signers.admin).getValueString(5)).to.equal("his hands ");
       expect(await this.poem.connect(this.signers.admin).getValueString(6)).to.equal("his eyes ");
-      expect(await this.poem.connect(this.signers.admin).getValueString(7)).to.equal("joyously,");
-      expect(await this.poem.connect(this.signers.admin).getValueString(8)).to.equal("to the clouds,");
-      expect(await this.poem.connect(this.signers.admin).getValueString(9)).to.equal("shyly,");
-      expect(await this.poem.connect(this.signers.admin).getValueString(10)).to.equal("towards his shoes,");
+      expect(await this.poem.connect(this.signers.admin).getValueString(7)).to.equal("joyously, ");
+      expect(await this.poem.connect(this.signers.admin).getValueString(8)).to.equal("to the clouds, ");
+      expect(await this.poem.connect(this.signers.admin).getValueString(9)).to.equal("shyly, ");
+      expect(await this.poem.connect(this.signers.admin).getValueString(10)).to.equal("towards his shoes, ");
       expect(await this.poem.connect(this.signers.admin).getValueString(11)).to.equal("the sun ");
       expect(await this.poem.connect(this.signers.admin).getValueString(12)).to.equal("the wind ");
-      expect(await this.poem.connect(this.signers.admin).getValueString(13)).to.equal("the footsteps");
+      expect(await this.poem.connect(this.signers.admin).getValueString(13)).to.equal("the footsteps ");
       expect(await this.poem.connect(this.signers.admin).getValueString(14)).to.equal("thunderous laughter ");
       expect(await this.poem.connect(this.signers.admin).getValueString(15)).to.equal("twinkling feathers ");
       expect(await this.poem.connect(this.signers.admin).getValueString(16)).to.equal("boistered ");

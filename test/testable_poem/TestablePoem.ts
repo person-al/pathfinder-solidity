@@ -6,7 +6,7 @@ import { shouldBehaveLikePoem } from "../poem/Poem.behavior";
 import { shouldStressWithoutProblems } from "../poem/Poem.stresstest";
 import type { Signers } from "../types";
 import { shouldBehaveLikeTestablePoem } from "./TestablePoem.behavior";
-import { deployPoemFixture } from "./TestablePoem.fixture";
+import { deployTestablePoemFixture } from "./TestablePoem.fixture";
 
 describe("TestablePoem", function () {
   before(async function () {
@@ -21,7 +21,7 @@ describe("TestablePoem", function () {
   });
 
   beforeEach(async function () {
-    const { poem } = await this.loadFixture(deployPoemFixture);
+    const { poem } = await this.loadFixture(deployTestablePoemFixture);
     this.poem = poem;
   });
 

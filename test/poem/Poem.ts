@@ -1,11 +1,17 @@
 import { mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signer-with-address";
+import fs from "fs";
 import { ethers } from "hardhat";
+import os from "os";
+import path from "path";
+import { DOMParser } from "xmldom";
 
 import type { Poem } from "../../src/types/contracts/Poem.sol/Poem";
 import type { Poem__factory } from "../../src/types/factories/contracts/Poem.sol/Poem__factory";
 import type { Signers } from "../types";
+
+const DESTINATION = path.join(os.tmpdir(), "poem-svg-render-");
 
 describe("Poem", function () {
   before(async function () {
@@ -24,10 +30,10 @@ describe("Poem", function () {
     this.poem = poem;
   });
 
-  simulateContractLifecycle(10, 500, false);
+  simulateContractLifecycle(10, 500);
 });
 
-async function deployPoemFixture(): Promise<{ poem: Poem }> {
+export async function deployPoemFixture(): Promise<{ poem: Poem }> {
   const signers: SignerWithAddress[] = await ethers.getSigners();
   const admin: SignerWithAddress = signers[0];
 
@@ -55,6 +61,7 @@ export function simulateContractLifecycle(
   outerLoopCount: number,
   innerLoopCount: number,
   debug: boolean = false,
+  saveImages: boolean = false,
 ): void {
   it("simulate entire contract lifecycle", async function () {
     enum Options {
@@ -71,6 +78,13 @@ export function simulateContractLifecycle(
       let next = Options.MINT;
       let currToken = 0;
       let blockNum = 0;
+
+      let contractPath: number[] = [];
+      let tempFolder = "";
+      if (saveImages) {
+        tempFolder = fs.mkdtempSync(DESTINATION);
+      }
+      let numPics = 1;
 
       // TODO: if you update the 500 to 1000 you often end up with a generic failure
       for (let i = 0; i < innerLoopCount; i++) {
@@ -152,6 +166,22 @@ export function simulateContractLifecycle(
             break;
         }
 
+        // If we want to save an image and we have an NFT minted, then save that image
+        if (saveImages) {
+          const newPath = [];
+          for (let i = 0; i < 9; i++) {
+            newPath.push(await this.poem.connect(this.signers.admin).path(i));
+          }
+          if (JSON.stringify(newPath) !== JSON.stringify(contractPath)) {
+            await writeSvg(tempFolder, this.poem, this.signers.admin, numPics, newPath);
+            contractPath = newPath;
+            numPics += 1;
+          }
+        } else {
+          // If we don't want to save the image, at least call tokenURI so we get a gas measurement on it.
+          // await this.poem.connect(this.signers.admin).tokenURI(tokenId);
+        }
+
         const nextPercentage = Math.floor(Math.random() * 100);
         if (nextPercentage <= 30) {
           next = Options.HOLD;
@@ -177,4 +207,29 @@ export function simulateContractLifecycle(
       }
     }
   });
+}
+
+async function writeSvg(
+  tempFolder: string,
+  poem: Poem,
+  admin: SignerWithAddress,
+  _fileName: number,
+  contractPath: number[],
+) {
+  const fileName = path.join(tempFolder, _fileName + ".html");
+  console.log("Rendering", fileName);
+  const svg = await poem.connect(admin).getSvg();
+  const currStep = await poem.connect(admin).currStep();
+  fs.writeFileSync(
+    fileName,
+    `<html lang="en">
+  <head>
+  <meta http-equiv="Content-Type" 
+        content="text/html; charset=utf-8">
+  </head>
+  <h1>${currStep} - ${JSON.stringify(contractPath)}</h1>${svg}</html>`,
+  );
+
+  // Throws on invalid XML
+  new DOMParser().parseFromString(svg);
 }
