@@ -4,16 +4,66 @@
 - [ ] finish all unit tests
 - [x] create script to generate all potential image outcomes
 - [ ] see where we can save on gas
-- [ ] deploy on testnet
+- [ ] make royalties OpenSea compatible
+- [ ] support contract-level metadata for OpenSea: https://docs.opensea.io/docs/contract-level-metadata
+- [x] deploy on testnet
+- [x] rename "plusTip" to "keepTheChange"
 - [ ] make licensing clear
 - [ ] improve README
 - [ ] create website homepage (optional)
+- [ ] come up with a better project name
 - [ ] update repo name
 - [ ] deploy on mainnet
 
 ## Potential modifications:
 
 - Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+
+## 2022-09-21
+
+Contracts:
+
+- made mintFee updatable in case I mess something up at deploy time
+- fixed tokenURI and SVG rendering to work with OpenSea
+
+Scripts:
+
+- created deploy script
+- enabled Rinkelby and Goerli connections
+
+### Gas usage
+
+```
+·---------------------------------------|---------------------------|-------------|-----------------------------·
+|         Solc version: 0.8.15          ·  Optimizer enabled: true  ·  Runs: 800  ·  Block limit: 30000000 gas  │
+········································|···························|·············|······························
+|  Methods                              ·               3 gwei/gas                ·       1605.66 usd/eth       │
+·················|······················|·············|·············|·············|···············|··············
+|  Contract      ·  Method              ·  Min        ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  burn                ·      55989  ·     103307  ·      70478  ·           70  ·       0.34  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  mint                ·      64996  ·      99196  ·      80142  ·           70  ·       0.39  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  transferFrom        ·      45932  ·      67857  ·      58500  ·          145  ·       0.28  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  burn                ·      56012  ·      99734  ·      78157  ·           33  ·       0.38  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  mint                ·      65029  ·      99229  ·      88795  ·           59  ·       0.43  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  packNode            ·      38911  ·      38971  ·      38948  ·           19  ·       0.19  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  setHistoricalInput  ·      29021  ·      29033  ·      29028  ·           23  ·       0.14  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  transferFrom        ·      45987  ·      67901  ·      55533  ·           64  ·       0.27  │
+·················|······················|·············|·············|·············|···············|··············
+|  Deployments                          ·                                         ·  % of limit   ·             │
+········································|·············|·············|·············|···············|··············
+|  Poem                                 ·          -  ·          -  ·    3931553  ·       13.1 %  ·      18.94  │
+········································|·············|·············|·············|···············|··············
+|  TestablePoem                         ·          -  ·          -  ·    5290890  ·       17.6 %  ·      25.49  │
+·---------------------------------------|-------------|-------------|-------------|---------------|-------------·
+```
 
 ## 2022-08-20
 

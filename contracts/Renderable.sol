@@ -36,20 +36,21 @@ abstract contract RenderableMetadata {
     }
 
     function getJSON(uint256 _tokenId, string memory _imageData) public pure returns (string memory) {
+        /* solhint-disable max-line-length */
         return
             string.concat(
                 '{"name": "Piece #',
                 uint2str(_tokenId),
-                '", "description":"Poem is a collaborative poetry pathfinder.", "image": "data:image/svg+xml;base64,',
+                '", "description":"POEM is a collaborative poetry pathfinder. As tokens are minted, transferred, and held, the path before us changes. To take the next step, we must burn a token. Let us see what we create together.", "image": "data:image/svg+xml;base64,',
                 _imageData,
-                '"}"'
+                '"}'
             );
     }
 
     function renderDiamond(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
         /* solhint-disable max-line-length */
         string
-            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18;color:#a9a9a9;height:100%;overflow:auto;} .nodeNotSelected{font-size:18;color:#555555;height:100%;overflow:auto;} .nodeSelected{font-size:18;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
+            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18px;font-family:serif;color:#a9a9a9;height:100%;overflow:auto;} .nodeNotSelected{font-size:18px;font-family:serif;color:#555555;height:100%;overflow:auto;} .nodeSelected{font-size:18px;font-family:serif;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18px;font-family:serif;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
         for (uint8 i = 1; i <= 25; i++) {
             bytes32 phraseBytes = _getValueBytes(i);
             uint8[2] memory dimen = nodeIndexToRowColumn(i);
@@ -64,7 +65,7 @@ abstract contract RenderableMetadata {
     function renderLine(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
         /* solhint-disable max-line-length */
         string
-            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.sentence{font-size:70;color:white;height:100%;overflow:auto;}</style>';
+            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.sentence{font-size:70px;font-family:serif;color:white;height:100%;overflow:auto;}</style>';
         string memory sentence = "";
         for (uint8 i = 0; i < 9; i++) {
             uint8 index = path[i];
@@ -195,7 +196,12 @@ library Svg {
         string memory _textProps,
         string memory _boxProps
     ) internal pure returns (string memory) {
-        return el("foreignObject", _boxProps, el("div", _textProps, _text));
+        return
+            el(
+                "foreignObject",
+                _boxProps,
+                el("div", string.concat(prop("xmlns", "http://www.w3.org/1999/xhtml"), _textProps), _text)
+            );
     }
 
     /* COMMON */

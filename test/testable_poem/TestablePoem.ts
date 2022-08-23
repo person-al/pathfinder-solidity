@@ -3,6 +3,7 @@ import type { SignerWithAddress } from "@nomiclabs/hardhat-ethers/dist/src/signe
 import { ethers } from "hardhat";
 
 import { shouldBehaveLikePoem } from "../poem/Poem.behavior";
+import { shouldRender } from "../poem/Poem.render";
 import { shouldStressWithoutProblems } from "../poem/Poem.stresstest";
 import type { Signers } from "../types";
 import { shouldBehaveLikeTestablePoem } from "./TestablePoem.behavior";
@@ -28,4 +29,5 @@ describe("TestablePoem", function () {
   shouldBehaveLikeTestablePoem();
   shouldBehaveLikePoem();
   shouldStressWithoutProblems();
+  shouldRender();
 });

@@ -5,7 +5,6 @@ import type { NetworkUserConfig } from "hardhat/types";
 import { resolve } from "path";
 
 import "./tasks/accounts";
-import "./tasks/deploy";
 
 dotenvConfig({ path: resolve(__dirname, "./.env") });
 
@@ -66,11 +65,13 @@ const config: HardhatUserConfig = {
       optimisticEthereum: process.env.OPTIMISM_API_KEY || "",
       polygon: process.env.POLYGONSCAN_API_KEY || "",
       polygonMumbai: process.env.POLYGONSCAN_API_KEY || "",
+      goerli: process.env.ETHERSCAN_API_KEY || "",
       rinkeby: process.env.ETHERSCAN_API_KEY || "",
     },
   },
   gasReporter: {
     currency: "USD",
+    coinmarketcap: process.env.COINMARKETCAP_API_KEY,
     enabled: process.env.REPORT_GAS ? true : false,
     excludeContracts: [],
     src: "./contracts",
@@ -89,7 +90,15 @@ const config: HardhatUserConfig = {
     optimism: getChainConfig("optimism-mainnet"),
     "polygon-mainnet": getChainConfig("polygon-mainnet"),
     "polygon-mumbai": getChainConfig("polygon-mumbai"),
-    rinkeby: getChainConfig("rinkeby"),
+    rinkeby: {
+      url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.TESTNET_PRIVATE_KEY as string],
+    },
+    // rinkeby: getChainConfig("rinkeby"),
+    goerli: {
+      url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
+      accounts: [process.env.TESTNET_PRIVATE_KEY as string],
+    },
   },
   paths: {
     artifacts: "./artifacts",

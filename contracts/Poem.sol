@@ -19,13 +19,13 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     uint8 public constant MAX_NUM_NFTS = 7;
     uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
-    uint256 public immutable _mintFee; // In wei
     uint256 private immutable _deployedBlockNumber;
 
     // Does the order matter? Should I define these near the other uint8s?
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
+    uint256 public _mintFee; // In wei
     uint256[26] internal nodes = [
         0,
         909926238360867929735398212882603035651154206890943763432627265628419941664,
@@ -89,6 +89,10 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         return (owner(), _salePrice / 100);
     }
 
+    function updateMintFee(uint256 mintFeeWei) external onlyOwner {
+        _mintFee = mintFeeWei;
+    }
+
     // ========= PUBLIC FUNCTIONS =========
     // mint, burn, tokenURI, SVG
 
@@ -101,8 +105,8 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         return _getSvg(currStep, path, shouldRenderDiamond());
     }
 
-    function mint(bool plusTip) external payable {
-        if (plusTip) {
+    function mint(bool keepTheChange) external payable {
+        if (keepTheChange) {
             require(msg.value >= _mintFee, "Wrong price");
         } else {
             require(msg.value == _mintFee, "Wrong price");

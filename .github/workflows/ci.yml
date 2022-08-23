@@ -3,6 +3,9 @@ name: "CI"
 env:
   INFURA_API_KEY: ${{ secrets.INFURA_API_KEY }}
   MNEMONIC: ${{ secrets.MNEMONIC }}
+  TESTNET_PRIVATE_KEY: ${{secrets.TESTNET_PRIVATE_KEY}}
+  ALCHEMY_KEY: ${{secrets.ALCHEMY_KEY}}
+  COINMARKETCAP_API_KEY: ${{secrets.COINMARKETCAP_API_KEY}}
 
 on:
   pull_request:
