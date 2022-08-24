@@ -95,13 +95,15 @@ The Poem contract is the most complex and is worth a more thorough explanation:
 
 #### Rendering
 
-- There are currently two ways the token can be rendered (it changes based on the historicalInput value). There's the diamond poem shape:
+There are currently two ways the token can be rendered (it changes based on the historicalInput value). There's the diamond poem shape:
 
 ![](./assets/diamond-start.svg)
 
 and a linear version:
 
 ![](./assets/line-start.svg)
+
+Note that both examples are showing the initialized state, where currStep is 0 and path is [1,0,0,0,0,0,0,0,25].
 
 (more examples in [Rendering Examples](#rendering-examples) below)
 
@@ -136,11 +138,15 @@ Thanks to CommitsVortex for the [ideas and brainstorming](https://person-al.gith
 
 ### Diamond, path with skips: [1,3,5,7,0,0,0,0,25] currStep: 8
 
-![](diamond-path-skips.svg)
+Note that white denotes a chosen step and crossed out darker nodes represent a row being skipped.
+
+![](./assets/diamond-path-skips.svg)
 
 ### Line, path with skips: [1,3,0,8,11,18,0,0,25] currStep: 6
 
-![](line-skips.svg)
+Note that only the chosen path is displayed and hidden and future steps are both whited out.
+
+![](./assets/line-skips.svg)
 
 ## Developer Tips
 
