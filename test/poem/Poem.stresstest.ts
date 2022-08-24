@@ -42,6 +42,6 @@ export function shouldStressWithoutProblems(): void {
     it("simulate getCurrIndex updates");
     it("simulate takeNextStep updates");
 
-    simulateContractLifecycle(1, 500, false);
+    simulateContractLifecycle(1, 400, false);
   });
 }
