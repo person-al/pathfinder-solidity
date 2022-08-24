@@ -26,7 +26,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
     uint256 public _mintFee; // In wei
-    uint256[26] internal nodes = [
+    uint256[26] internal _nodes = [
         0,
         909926238360867929735398212882603035651154206890943763432627265628419941664,
         1818085630288831225152556248451971318888503523798382480318670550428524307488,
@@ -98,11 +98,11 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
 
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (!_exists(_tokenId)) revert URIQueryForNonexistentToken(); // do we want this check?
-        return _getTokenUri(_tokenId, currStep, path, shouldRenderDiamond());
+        return _getTokenUri(_tokenId, currStep, path, _shouldRenderDiamond());
     }
 
     function getSvg() external view returns (string memory) {
-        return _getSvg(currStep, path, shouldRenderDiamond());
+        return _getSvg(currStep, path, _shouldRenderDiamond());
     }
 
     function mint(bool keepTheChange) external payable {
@@ -138,7 +138,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         // to ensure that the owner check on burning happens BEFORE we take the step.
         if (uint160(to) == 0) {
             if (currStep < MAX_NUM_NFTS) {
-                takeNextStep(startTokenId);
+                _takeNextStep(startTokenId);
             }
         } else {
             // If we're not burning, the receiver can only hold 3 tokens at a time.
@@ -228,7 +228,7 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
         }
     }
 
-    function takeNextStep(uint256 tokenId) private {
+    function _takeNextStep(uint256 tokenId) private {
         TokenOwnership memory info = _ownershipOf(tokenId);
         uint64 lastTransferBlockNumber = _getAux(info.addr);
         uint24 numOwners = info.extraData;
@@ -276,12 +276,12 @@ contract Poem is ERC721A, Ownable, IERC2981, RenderableMetadata {
 
     // ========= INTERNAL GETTERS =========
 
-    function shouldRenderDiamond() internal view returns (bool) {
+    function _shouldRenderDiamond() internal view returns (bool) {
         return (_historicalInput >> 3) % 2 == 1;
     }
 
     function _getNode(uint8 index) internal view returns (bytes32) {
-        return bytes32(nodes[index]);
+        return bytes32(_nodes[index]);
     }
 
     function _getLeftChild(uint8 index) internal view returns (uint8) {

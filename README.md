@@ -33,9 +33,9 @@ The Poem contract is the most complex and is worth a more thorough explanation:
 
 #### Stored info:
 
-- path: the current path we're taking down the diamond, as expressed by node indices.
-- currStep: our current index in the path list.
-- nodes: a list of uint256s representing the entire diamond.
+- `path`: the current path we're taking down the diamond, as expressed by node indices.
+- `currStep`: our current index in the path list.
+- `_nodes`: a list of uint256s representing the entire diamond.
   - the index of a node in the list represents the node's id or index.
   - you'll note that node 0 is empty and is only used to denote the end of the graph
   - each uint256 has the following information packed into it:
@@ -55,7 +55,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
   - if a token is being burned, take a step down the diamond
   - if we're not burning, make sure the receiver has a max of 2 tokens
 - **`_afterTokenTransfers`**:
-  - in all cases after a token transfer, we update our \_historicalInput value. We'll get into this later.
+  - in all cases after a token transfer, we update our `_historicalInput` value. We'll get into this later.
   - if we're not burning the token, store the blockstamp of the token transfer. We will use this later to calculate how long a token was held before burning.
     - You'll notice that due to storage restrictions, we're storing a truncated version of the blockstamp by using the deployment blockNumber as our "epoch"
     - we are storing the blockstamp in the "Aux" property in the owner address map (`_packedAddressData`) provided by ERC721A. This works because we only care about how long a token was held by the owner who chooses to burn the token. The value in Aux will and should get overridden if a previous owner gets a new token.
@@ -68,7 +68,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
 #### Internal functions
 
 - **`_newHistoricalInput`**:
-  - there were many ways to choose our path down the diamond. I chose to amalgamate the history of the contract into a pseudorandom number that could be used in the `takeNextStep` function.
+  - there were many ways to choose our path down the diamond. I chose to amalgamate the history of the contract into a pseudorandom number that could be used in the `_takeNextStep` function.
   - this function is called in the `_afterTransferTokens` hook.
   - Again, the goal here is to smash some of the transfer data into a pseudorandom number that adjusts over time in a loosely unpredictable way.
   - I know that the public can always spy on this value to decide if they want to burn on a specific day or not. I believe that (1) adding block difficulty and block number to the equation and (2) having this run whenever a transfer happens shake up enough of the public's control to make this inconvenient to force. You'd need to wait for the right week with the right address and then may get foiled by someone else transferring or burning in the middle. If someone _really_ wants to choose an outcome and goes through the effort to do so, I'm gonna call it part of the art.
@@ -79,7 +79,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
   - It uses that to determine the likelihood we skip this row in the poem. The idea here is that the longer a token is held, the more "faint" our path becomes.
   - The general formulat is: if the token is held for less than 4 months, there's a 0% chance we skip this row. If it's held for over a year, there's a 100% change we skip this row.
   - If we're in the middle, the percent chance is determined by the function 12x-54. This is a loosely linear line from (4,0) to (12,100).
-- **`jitterLevel`**:
+- **`_jitterLevel`**:
   - this function returns the percent change we stray from our typical path.
   - When you look at the diamond above, there is a clear left and right child to any given node. If we were on the "his hands" node, the obvious path would be to choose either "to the clouds" or "shyly".
   - However, if a token has had a certain number of owners, there's a chance we pick a random other node in that row: either "joyously" or "towards his shoes".
@@ -89,7 +89,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
   - this function returns the current index we're on by checking path.
   - this is straightforward in most cases. However, let's say someone held a token for too long and we skipped a given row. In that case, we want `_getCurrIndex` to pick a potential index we _could_ be on so we can advance to a valid next step.
   - it uses the token's owner's address as a pseudo random number to decide which index we might be on. (Again, this is gameable, but I think I'm okay with that?)
-- **`takeNextStep`**:
+- **`_takeNextStep`**:
   - this function determines what step we should take next. It does so via the following steps:
     1. determine the likelihood we skip this step (`_opacityLevel`)
     2. determine the likelihood we jump off our typical path (`_jitterLevel`)

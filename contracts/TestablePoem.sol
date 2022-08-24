@@ -53,7 +53,7 @@ contract TestablePoem is Poem(0) {
         uint256 kidsPacked = (uint256(leftIndex) << (TOTAL_NUM_BITS - BITS_IN_BYTES)) |
             (uint256(rightIndex) << (TOTAL_NUM_BITS - 2 * BITS_IN_BYTES));
         uint256 packed = kidsPacked | jitterKidsPacked | bytesToUint(bytes(value));
-        nodes[index] = packed;
+        _nodes[index] = packed;
     }
 
     function initialize() external onlyOwner {
@@ -150,7 +150,7 @@ contract TestablePoem is Poem(0) {
     }
 
     function getNodes() external view returns (uint256[26] memory) {
-        return nodes;
+        return _nodes;
     }
 
     function getPath() external view returns (uint8[9] memory) {
