@@ -24,7 +24,9 @@ Here's a quick diagram of the contracts involved:
 
 ### Poem.sol
 
-The Poem contract is the most complex. It contains the following information:
+The Poem contract is the most complex and is worth a more thorough explanation:
+
+#### Stored info:
 
 - path: the current path we're taking down the diamond, as expressed by node indices.
 - currStep: our current index in the path list.
@@ -42,7 +44,7 @@ The Poem contract is the most complex. It contains the following information:
     3. 0, 0, 0 (there are no other nodes in the same row as 2 & 3)
     4. The string "As he" represented as a number
 
-Overrides worth noting:
+#### ERC721A Overrides
 
 - **`_beforeTokenTransfers`**:
   - if a token is being burned, take a step down the diamond
@@ -58,7 +60,7 @@ Overrides worth noting:
   - Here we store how many owners a token has had. We will use this later.
   - The `_extraData` hook is called in ERC721A's `transferFrom` function.
 
-Internal functions of note:
+#### Internal functions
 
 - **`_newHistoricalInput`**:
   - there were many ways to choose our path down the diamond. I chose to amalgamate the history of the contract into a pseudorandom number that could be used in the `takeNextStep` function.
@@ -91,14 +93,15 @@ Internal functions of note:
     5. use the historical seed to choose one of the above 4 outcomes
     6. update path and currStep to take our next step
 
-Notes on rendering:
+#### Rendering
 
 - There are currently two ways the token can be rendered (it changes based on the historicalInput value). There's the diamond poem shape:
 
-![](./assets/diamond.svg)
+![](./assets/diamond-start.svg)
 
 and a linear version:
-![](./assets/line.svg)
+
+![](./assets/line-start.svg)
 
 (more examples in [Rendering Examples](#rendering-examples) below)
 
