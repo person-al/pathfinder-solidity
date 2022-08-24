@@ -1,3 +1,5 @@
+**Launched on Rinkeby:** [Mint](https://rinkeby.etherscan.io/address/0xdee90ccc0ebd4b1cf3373621946b8fee22660f47#writeContract) | [View Collection on OpenSea](https://testnets.opensea.io/collection/poempathfinder) | [Get Rinkeby Eth](https://rinkebyfaucet.com/)
+
 # Poetry through history
 
 Create a poem with strangers. Play with the boundaries of on-chain history and ownership.
