@@ -10,12 +10,15 @@ PoemPathfinder contains a diamond-shaped poem which, in itself, contains 21600 p
 
 ![](./assets/diamond.svg)
 
-Each of the 7 mintable NFTs represent a choice: left or right? As tokens are transferred and held, the path before them changes. The more owners a token has, the more likely it is to stray off the strict left-right path. And the longer a token is held, the more the future hides from view. To take the next step, a token must be burned and the image for all tokens us updated to reflect the current path. Mint, hold, transfer, sell, or burn, it's up to you! Let's see what we make together.
+Each of the 7 mintable NFTs represent a choice: left or right? As tokens are transferred and held, the path before them changes. The more owners a token has, the more likely it is to stray off the strict left-right path. And the longer a token is held, the more the future hides from view. To take the next step, a token must be burned and the image for all tokens is updated to reflect the current path. Mint, hold, transfer, sell, or burn, it's up to you! Let's see what we make together.
 
 ### Rules
 
+- there are 7 total NFTs available
 - you may mint a maximum of one token
-- you can hold up to 3 tokens at a time
+- you may hold up to 3 tokens at a time
+- minting, transferring, and holding all impact the path we take down the diamond
+- burning a tokens solidifies our next step
 
 ## Architecture
 
@@ -112,10 +115,11 @@ The goal was to make it easier to see the forest as well as the tree, so to spea
 ## Open Questions
 
 - Do I need a Reentrancy Guard with the way the contract is designed?
+- Should I trim the ERC721A contract to just the functions I need? I can't tell if the approval functions are necessary for my use case or just a security hole.
 - Are there cheaper ways to store the SVG rendering pieces?
 - Are there better renderings I could do or adjustments to the rendering I should do?
 - Is my randomness random enough? Are there edge cases I haven't thought of? This isn't a DeFi application, a high profile launch, or a game where fairness matters. So I don't need the randomness to be foolproof. It needs to be fun and inconvenient to game.
-  - One option that's occurred to me is to get rid of \_historicalInput all together and just use the hash of the previous block. But I like the sense of history historicalInput brings to the piece.
+  - One option to simplify the mechanics is to get rid of `_historicalInput` and just use the hash of the previous block as the burn-time seed. But I like the sense of history historicalInput brings to the piece.
 
 ## Inspiration, Resources, and Kudos
 
@@ -124,7 +128,7 @@ PoemPathfinder draws inspiration from many sources:
 - I wanted to keep as much data on-chain as possible, and create something that wouldn't mean as much if it was built off-chain. Loot and Corruption(s\*) provided helpful examples of how to achieve those goals.
 - Layli Long Soldier's poem [Obligations 2](https://www.poetryfoundation.org/poems/149976/obligations-2) inspired the shape of the poem and the pathfinding concept.
 
-The following resources were instrumental in my smartcontract construction:
+The following resources were instrumental in smartcontract construction:
 
 - Xuannü's blog posts ([1](https://cryptocoven.mirror.xyz/A622VSRm8-9oLzc8l3oFGmfnFUZQmDQ3Wx3ObhSlhsc?ref=tokendaily), [2](https://cryptocoven.mirror.xyz/0eZ0tjudMU0ByeXLlRtPzDqxGzMMZw6ldzf-HfYETW0)) on developing CryptoCoven were a crucial starting point. They combined code with context in a way that a reading a smart contract on its own couldn't do.
 - The [CryptoCoven](https://www.solidlint.com/address/0x5180db8f5c931aae63c74266b211f580155ecac8), [Loot](https://www.solidlint.com/address/0xFF9C1b15B16263C61d017ee9F65C50e4AE0113D7), and [WatchfaceWorld](https://www.solidlint.com/address/0x8d3b078d9d9697a8624d4b32743b02d270334af1) smartcontracts
