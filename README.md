@@ -142,7 +142,7 @@ Thanks to CommitsVortex for the [ideas and brainstorming](https://person-al.gith
 
 ## Rendering Examples
 
-### Diamond, path with skips: [1,3,5,7,0,0,0,0,25] currStep: 8
+### Diamond, path with skips and a jitter: [1,3,5,7,0,0,0,0,25] currStep: 8
 
 Note that white denotes a chosen step and crossed out darker nodes represent a row being skipped.
 
