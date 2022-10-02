@@ -21,6 +21,10 @@
 
 ## 2022-09-21
 
+<mark>Deployed: [Rinkeby](https://rinkeby.etherscan.io/address/0xDeE90CcC0ebD4b1cf3373621946b8fee22660f47#code)</mark>
+
+## 2022-09-21
+
 Contracts:
 
 - made mintFee updatable in case I mess something up at deploy time
