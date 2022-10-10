@@ -2,9 +2,9 @@
 pragma solidity >=0.8.4;
 
 import "hardhat/console.sol";
-import "./Poem.sol";
+import "./TestnetPoem.sol";
 
-contract TestablePoem is Poem(0) {
+contract TestableTestnetPoem is TestnetPoem(0) {
     uint16 public constant TOTAL_NUM_BITS = 256;
     uint8 public constant BITS_IN_BYTES = 8;
     uint8 public constant MAX_LEN_VALUE = 27;
@@ -90,14 +90,6 @@ contract TestablePoem is Poem(0) {
         return path[currStep];
     }
 
-    function getTestableSvg(
-        uint256 tokenId,
-        uint8 _jitterLevel,
-        uint8 _hiddenLevel
-    ) external view returns (string memory) {
-        return _getSvg(tokenId, currStep, path, _jitterLevel, _hiddenLevel, _shouldRenderDiamond());
-    }
-
     function getHistoricalInput() external view returns (uint256) {
         return _historicalInput;
     }
@@ -145,8 +137,8 @@ contract TestablePoem is Poem(0) {
         return info.extraData;
     }
 
-    function hiddenLevel(uint256 numBlocksHeld) external pure returns (uint8) {
-        return _hiddenLevel(numBlocksHeld);
+    function opacityLevel(uint256 numBlocksHeld) external pure returns (uint8) {
+        return _opacityLevel(numBlocksHeld);
     }
 
     function jitterLevel(uint24 _numOwners) external pure returns (uint8) {

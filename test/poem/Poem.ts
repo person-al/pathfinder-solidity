@@ -107,7 +107,7 @@ export function simulateContractLifecycle(
               debug && console.log("User has minted before");
               break;
             }
-            await this.poem.connect(randomUser).mint(false);
+            await this.poem.connect(randomUser).mint();
             const a = userToToken.get(randomUser) || [];
             a.push(currToken);
             userToToken.set(randomUser, a);

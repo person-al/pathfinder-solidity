@@ -9,15 +9,33 @@
 - [x] deploy on testnet
 - [x] rename "plusTip" to "keepTheChange"
 - [ ] make licensing clear
-- [ ] improve README
-- [ ] create website homepage (optional)
-- [ ] come up with a better project name
-- [ ] update repo name
+- [x] improve README
+- [x] create website homepage (optional)
+- [x] come up with a better project name
+- [x] update repo name
 - [ ] deploy on mainnet
 
 ## Potential modifications:
 
-- Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+- [x] Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+
+## 2022-10-02
+
+### New Features
+
+- token image changes based on hiddenLevel and jitterLevel
+
+### Significant Changes
+
+- change royalty structure to kick in at 6 months
+- remove "keepTheChange" option at mint time: too confusing
+
+### Minor Tweaks
+
+- switching from require to custom errors
+- switch "opacityLevel" language to "hiddenLevel" language
+- making MAX_NUM_JITTERS and MAX_INDEX_VAL internal instead of public
+- renaming \_mintFee to mintFee since its public
 
 ## 2022-09-21
 

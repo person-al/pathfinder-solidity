@@ -2,7 +2,7 @@
 pragma solidity >=0.8.12;
 
 /* solhint-disable quotes */
-abstract contract RenderableMetadata {
+abstract contract TestnetRenderableMetadata {
     uint256 private indexLocation = 0x15242633353742444648515355575962646668737577848695000000000000;
 
     function _getValueBytes(uint8 index) internal view virtual returns (bytes32);
@@ -11,11 +11,9 @@ abstract contract RenderableMetadata {
         uint256 _tokenId,
         uint8 currStep,
         uint8[9] storage path,
-        uint8 jitterLevel,
-        uint8 hiddenLevel,
         bool _shouldRenderDiamond
     ) internal view returns (string memory) {
-        string memory svgString = _getSvg(_tokenId, currStep, path, jitterLevel, hiddenLevel, _shouldRenderDiamond);
+        string memory svgString = _getSvg(currStep, path, _shouldRenderDiamond);
         return
             string.concat(
                 "data:application/json;base64,",
@@ -24,37 +22,15 @@ abstract contract RenderableMetadata {
     }
 
     function _getSvg(
-        uint256 tokenId,
         uint8 currStep,
         uint8[9] storage path,
-        uint16 jitterLevel,
-        uint16 hiddenLevel,
         bool _shouldRenderDiamond
     ) internal view returns (string memory) {
-        uint16 blur = 100 - hiddenLevel;
-        string memory opacity = string.concat("0.", uint2str(blur));
-        if (blur == 100) {
-            opacity = "1";
-        }
-        string memory jitterVal = uint2str(jitterLevel * 10);
-        string memory id = uint2str(uint16(uint256(keccak256(abi.encode(jitterLevel, hiddenLevel, tokenId)))));
-        string memory svgString = string.concat(
-            '<svg xmlns="http://www.w3.org/2000/svg" height="100%" width="100%" viewBox="0 0 800 800" style="background:#1a1a1a" filter="url(#adj',
-            id,
-            ')"><defs><filter id="adj',
-            id,
-            '" x="0" y="0"><feTurbulence type="turbulence" baseFrequency="0.001" seed="',
-            uint2str(tokenId + 1),
-            '" numOctaves="',
-            jitterVal,
-            '"result="turbulence" /><feDisplacementMap  in2="turbulence"  in="SourceGraphic"  scale="',
-            jitterVal,
-            '" /></filter></defs>'
-        );
+        string memory svgString;
         if (_shouldRenderDiamond) {
-            svgString = string.concat(svgString, renderDiamond(path, currStep, opacity, id));
+            svgString = renderDiamond(path, currStep);
         } else {
-            svgString = string.concat(svgString, renderLine(path, currStep, opacity, id));
+            svgString = renderLine(path, currStep);
         }
         return svgString;
     }
@@ -71,51 +47,25 @@ abstract contract RenderableMetadata {
             );
     }
 
-    function renderDiamond(
-        uint8[9] storage path,
-        uint8 currStep,
-        string memory opacity,
-        string memory id
-    ) private view returns (string memory) {
-        string memory returnVal = string.concat(
-            unicode"<style>[class*='node",
-            id,
-            unicode"-']{font-size:18px;font-family:serif;height:100%;overflow:auto;opacity:",
-            opacity,
-            "} .node",
-            id,
-            "-default{color:#a9a9a9;} .node",
-            id,
-            "-notSelected{color:#555555;} .node",
-            id,
-            "-selected{color:white;} .node",
-            id,
-            "-hidden{color:#333333;text-decoration:line-through;}</style>"
-        );
+    function renderDiamond(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
+        /* solhint-disable max-line-length */
+        string
+            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.node{font-size:18px;font-family:serif;color:#a9a9a9;height:100%;overflow:auto;} .nodeNotSelected{font-size:18px;font-family:serif;color:#555555;height:100%;overflow:auto;} .nodeSelected{font-size:18px;font-family:serif;color:white;height:100%;overflow:auto;} .nodeHidden{font-size:18px;font-family:serif;color:#333333;text-decoration:line-through;height:100%;overflow:auto;}</style>';
         for (uint8 i = 1; i <= 25; i++) {
             bytes32 phraseBytes = _getValueBytes(i);
             uint8[2] memory dimen = nodeIndexToRowColumn(i);
             returnVal = string.concat(
                 returnVal,
-                renderNodeWord(path[dimen[0] - 1], currStep, bytes32ToString(phraseBytes), i, dimen[0], dimen[1], id)
+                renderNodeWord(path[dimen[0] - 1], currStep, bytes32ToString(phraseBytes), i, dimen[0], dimen[1])
             );
         }
         return string.concat(returnVal, "</svg>");
     }
 
-    function renderLine(
-        uint8[9] storage path,
-        uint8 currStep,
-        string memory opacity,
-        string memory id
-    ) private view returns (string memory) {
-        string memory returnVal = string.concat(
-            "<style>.sentence",
-            id,
-            "{font-size:70px;font-family:serif;color:white;height:100%;overflow-wrap:break-word;opacity:",
-            opacity,
-            "}</style>"
-        );
+    function renderLine(uint8[9] storage path, uint8 currStep) private view returns (string memory) {
+        /* solhint-disable max-line-length */
+        string
+            memory returnVal = '<svg xmlns="http://www.w3.org/2000/svg" width="800" height="800" style="background:#1a1a1a"><style>.sentence{font-size:70px;font-family:serif;color:white;height:100%;overflow:auto;}</style>';
         string memory sentence = "";
         for (uint8 i = 0; i < 9; i++) {
             uint8 index = path[i];
@@ -123,10 +73,10 @@ abstract contract RenderableMetadata {
         }
         string memory sentenceWrapped = Svg.wrapText(
             sentence,
-            Svg.prop("class", string.concat("sentence", id)),
+            Svg.prop("class", "sentence"),
             string.concat(Svg.prop("x", "30"), Svg.prop("y", "20"), Svg.prop("width", "760"), Svg.prop("height", "760"))
         );
-        return string.concat(returnVal, sentenceWrapped, "</svg>");
+        return string.concat(string.concat(returnVal, sentenceWrapped), "</svg>");
     }
 
     function getNodeText(
@@ -156,13 +106,12 @@ abstract contract RenderableMetadata {
         string memory value,
         uint8 index,
         uint256 row,
-        uint256 column,
-        string memory id
+        uint256 column
     ) private pure returns (string memory) {
         return
             Svg.wrapText(
                 value,
-                Svg.prop("class", getTextClass(pathVal, currStep, index, row, id)),
+                Svg.prop("class", getTextClass(pathVal, currStep, index, row)),
                 string.concat(
                     Svg.prop("x", uint2str(column * 80 - 40)),
                     Svg.prop("y", uint2str(row * 75)),
@@ -176,21 +125,22 @@ abstract contract RenderableMetadata {
         uint8 pathVal,
         uint8 currStep,
         uint8 index,
-        uint256 row,
-        string memory id
+        uint256 row
     ) private pure returns (string memory) {
         if (currStep >= row - 1) {
             if (pathVal == index) {
-                return string.concat("node", id, "-selected");
+                // If this node was selected
+                return "nodeSelected";
             }
             if (pathVal == 0) {
-                return string.concat("node", id, "-hidden");
+                // If this row was hidden
+                return "nodeHidden";
             }
             // If we're passed this row and this node wasn't selected
-            return string.concat("node", id, "-notSelected");
+            return "nodeNotSelected";
         }
         // If this node could be selected in the future
-        return string.concat("node", id, "-default");
+        return "node";
     }
 
     function bytes32ToString(bytes32 _bytes32) internal pure returns (string memory) {
