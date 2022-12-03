@@ -3,21 +3,84 @@
 - [x] determine token metadata and SVG rendering
 - [ ] finish all unit tests
 - [x] create script to generate all potential image outcomes
-- [ ] see where we can save on gas
-- [ ] make royalties OpenSea compatible
-- [ ] support contract-level metadata for OpenSea: https://docs.opensea.io/docs/contract-level-metadata
+- [ ] ~~see where we can save on gas~~ (I may be leaning more heavily towards features now :/)
+- [ ] ~~make royalties OpenSea compatible~~ I decided on no royalties for this project
+- [ ] ~~support contract-level metadata for OpenSea: https://docs.opensea.io/docs/contract-level-metadata~~ I'll just do it manually. If OpenSea isn't going to support the standard royalty format, why should I bother putting their desired metadata format onchain
 - [x] deploy on testnet
-- [x] rename "plusTip" to "keepTheChange"
-- [ ] make licensing clear
-- [ ] improve README
-- [ ] create website homepage (optional)
-- [ ] come up with a better project name
-- [ ] update repo name
+- [x] remove tip functionality
+- [ ] ~~make licensing clear~~ (no need, I think)
+- [x] improve README
+- [x] create website homepage (optional)
+- [x] come up with a better project name
+- [x] update repo name
 - [ ] deploy on mainnet
 
 ## Potential modifications:
 
-- Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+- [x] Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+
+## 2022-12-02
+
+### Significant Changes
+
+- adding hiddenLevel and jitterLevel to metadata and make them queryable externally
+- removed royalties entirely
+
+### Minor Tweaks
+
+- token image shifting doesn't affect background
+
+### Gas usage
+
+```
+·---------------------------------------|---------------------------|-------------|-----------------------------·
+|         Solc version: 0.8.15          ·  Optimizer enabled: true  ·  Runs: 800  ·  Block limit: 30000000 gas  │
+········································|···························|·············|······························
+|  Methods                              ·               5 gwei/gas                ·       1285.70 usd/eth       │
+·················|······················|·············|·············|·············|···············|··············
+|  Contract      ·  Method              ·  Min        ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  burn                ·      56030  ·      99903  ·      70675  ·           70  ·       0.45  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  mint                ·      64704  ·      98904  ·      80338  ·           70  ·       0.52  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  transferFrom        ·      45852  ·      67778  ·      58065  ·          176  ·       0.37  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  burn                ·      56031  ·      99757  ·      78168  ·           33  ·       0.50  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  mint                ·      64749  ·      98949  ·      88225  ·           59  ·       0.57  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  packNode            ·      38891  ·      38951  ·      38928  ·           19  ·       0.25  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  setHistoricalInput  ·      29064  ·      29076  ·      29071  ·           23  ·       0.19  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  transferFrom        ·      45898  ·      67822  ·      55197  ·           60  ·       0.35  │
+·················|······················|·············|·············|·············|···············|··············
+|  Deployments                          ·                                         ·  % of limit   ·             │
+········································|·············|·············|·············|···············|··············
+|  Poem                                 ·          -  ·          -  ·    4378505  ·       14.6 %  ·      28.15  │
+········································|·············|·············|·············|···············|··············
+|  TestablePoem                         ·          -  ·          -  ·    5726292  ·       19.1 %  ·      36.81  │
+·---------------------------------------|-------------|-------------|-------------|---------------|-------------·
+```
+
+## 2022-10-02
+
+### New Features
+
+- token image changes based on hiddenLevel and jitterLevel
+
+### Significant Changes
+
+- change royalty structure to kick in at 6 months
+- remove "keepTheChange" option at mint time: too confusing
+
+### Minor Tweaks
+
+- switching from require to custom errors
+- switch "opacityLevel" language to "hiddenLevel" language
+- making MAX_NUM_JITTERS and MAX_INDEX_VAL internal instead of public
+- renaming \_mintFee to mintFee since its public
 
 ## 2022-09-21
 

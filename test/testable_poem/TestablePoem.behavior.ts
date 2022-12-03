@@ -3,17 +3,21 @@ import { expect } from "chai";
 export function shouldBehaveLikeTestablePoem(): void {
   describe("TestablePoem getters", function () {
     it("throws require when getting a Node that doesn't exist", async function () {
-      await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getRightChild(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getRightChild(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getValueBytes(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getValueBytes(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getJitterKids(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getJitterKids(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
     });
 
@@ -57,13 +61,13 @@ export function shouldBehaveLikeTestablePoem(): void {
 
   describe("TestablePoem packing and unpacking", function () {
     it("errors out if packed with invalid index", async function () {
-      await expect(this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [0, 0, 0])).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
-      );
+      await expect(
+        this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [0, 0, 0]),
+      ).to.be.revertedWithCustomError(this.poem, "InvalidIndexMin1Max25");
 
-      await expect(this.poem.connect(this.signers.admin).packNode(26, "hello", 2, 3, [0, 0, 0])).to.be.revertedWith(
-        "Cannot support more than 25 nodes.",
-      );
+      await expect(
+        this.poem.connect(this.signers.admin).packNode(26, "hello", 2, 3, [0, 0, 0]),
+      ).to.be.revertedWithCustomError(this.poem, "InvalidIndexMin1Max25");
     });
 
     it("supports 0-index for left and right children", async function () {

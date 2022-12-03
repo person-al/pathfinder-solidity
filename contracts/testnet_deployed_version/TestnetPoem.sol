@@ -4,27 +4,28 @@ pragma solidity >=0.8.12;
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./Renderable.sol";
+import "./TestnetRenderable.sol";
 
-/// Index should be > 0 and <= MAX_INDEX_VAL
-error InvalidIndexMin1Max25();
-error MintFeeNotMet();
-error OutOfTokens();
-error YouCanOnlyMint1Token();
-error OneCanHoldMax3Tokens(address to);
+interface IERC2981 {
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount);
+}
 
-contract Poem is ERC721A, Ownable, RenderableMetadata {
-    uint8 internal constant MAX_NUM_JITTERS = 3;
-    uint8 internal constant MAX_INDEX_VAL = 25;
+contract TestnetPoem is ERC721A, Ownable, IERC2981, TestnetRenderableMetadata {
+    uint8 public constant MAX_NUM_JITTERS = 3;
+    uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
     uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
 
     uint256 private immutable _deployedBlockNumber;
 
+    // Does the order matter? Should I define these near the other uint8s?
     uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
-    uint256 public mintFee; // In wei
+    uint256 public _mintFee; // In wei
     uint256[26] internal _nodes = [
         0,
         909926238360867929735398212882603035651154206890943763432627265628419941664,
@@ -60,14 +61,13 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
      */
     constructor(uint256 _mintPrice) ERC721A("PoemPathfinder", "POEM") {
         _deployedBlockNumber = block.number;
-        mintFee = _mintPrice;
+        _mintFee = _mintPrice;
     }
 
     // ========= VALIDATION =========
     function indexIsValid(uint256 _index) internal pure {
-        if (_index <= 0 || _index > MAX_INDEX_VAL) {
-            revert InvalidIndexMin1Max25();
-        }
+        require(_index > 0, "Use a positive, non-zero index for your nodes.");
+        require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
     }
 
     // ========= PAYMENTS =========
@@ -81,73 +81,39 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
         _erc20Token.transfer(owner(), _erc20Token.balanceOf(address(this)));
     }
 
+    function supportsInterface(bytes4 _interfaceId) public view override returns (bool) {
+        return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (owner(), _salePrice / 100);
+    }
+
     function updateMintFee(uint256 mintFeeWei) external onlyOwner {
-        mintFee = mintFeeWei;
+        _mintFee = mintFeeWei;
     }
 
     // ========= PUBLIC FUNCTIONS =========
     // mint, burn, tokenURI, SVG
 
-    function totalMinted() external view returns (uint256) {
-        return _totalMinted();
-    }
-
-    function totalBurned() external view returns (uint256) {
-        return _totalBurned();
-    }
-
-    function totalMintedTo(address to) external view returns (uint256) {
-        return _numberMinted(to);
-    }
-
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (!_exists(_tokenId)) revert URIQueryForNonexistentToken(); // do we want this check?
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint64 lastTransferBlockNumber = _getAux(info.addr);
-        uint24 numOwners = info.extraData;
-        uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-
-        return
-            _getTokenUri(
-                _tokenId,
-                currStep,
-                path,
-                _jitterLevel(numOwners),
-                _hiddenLevel(numBlocksHeld),
-                _shouldRenderDiamond()
-            );
+        return _getTokenUri(_tokenId, currStep, path, _shouldRenderDiamond());
     }
 
-    function getDefaultSvg() external view returns (string memory) {
-        return _getSvg(0, currStep, path, 0, 0, _shouldRenderDiamond());
+    function getSvg() external view returns (string memory) {
+        return _getSvg(currStep, path, _shouldRenderDiamond());
     }
 
-    function getHiddenLevel(uint8 _tokenId) external view returns (uint8) {
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint64 lastTransferBlockNumber = _getAux(info.addr);
-
-        uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-        return _hiddenLevel(numBlocksHeld);
-    }
-
-    function getJitterLevel(uint8 _tokenId) external view returns (uint8) {
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint24 numOwners = info.extraData;
-
-        return _jitterLevel(numOwners);
-    }
-
-    function mint() external payable {
-        if (msg.value != mintFee) {
-            revert MintFeeNotMet();
+    function mint(bool keepTheChange) external payable {
+        if (keepTheChange) {
+            require(msg.value >= _mintFee, "Wrong price");
+        } else {
+            require(msg.value == _mintFee, "Wrong price");
         }
         address to = msg.sender;
-        if (_totalMinted() >= MAX_NUM_NFTS) {
-            revert OutOfTokens();
-        }
-        if (_numberMinted(to) != 0) {
-            revert YouCanOnlyMint1Token();
-        }
+        require(_totalMinted() < MAX_NUM_NFTS, "Out of tokens.");
+        require(_numberMinted(to) == 0, "You can only mint 1 token.");
         _safeMint(to, 1);
     }
 
@@ -176,9 +142,7 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
             }
         } else {
             // If we're not burning, the receiver can only hold 3 tokens at a time.
-            if (balanceOf(to) > 2) {
-                revert OneCanHoldMax3Tokens(to);
-            }
+            require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
         }
     }
 
@@ -200,9 +164,11 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
             //      Because we only have 64 bits, we can't store the full block number.
             //      Instead, we'll store the difference between this block and the deploy block.
             //      That's enough bits to store roughly 77M centuries from deployment.
+            uint64 maxVal = 18446744073709551615;
             uint256 newBlockNumber = block.number - _deployedBlockNumber;
-            // Unchecked because we can let it wrap around to zero after 77M centuries
-            unchecked {
+            if (newBlockNumber >= maxVal) {
+                _setAux(to, maxVal);
+            } else {
                 _setAux(to, uint64(newBlockNumber));
             }
         } else {
@@ -269,7 +235,7 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
 
         // 1: figure out opacity
         uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-        uint8 hiddenPercentage = _hiddenLevel(numBlocksHeld);
+        uint8 hiddenPercentage = _opacityLevel(numBlocksHeld);
         if (hiddenPercentage == 100) {
             currStep += 1;
             return;
@@ -378,12 +344,8 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
         return _preferNonZeroVal(left, right, right);
     }
 
-    function _numBlocksToEstMonths(uint256 numBlocks) internal pure returns (uint256) {
-        return numBlocks / (7000 * 30);
-    }
-
-    function _hiddenLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
-        uint256 estNumMonthsHeld = _numBlocksToEstMonths(numBlocksHeld);
+    function _opacityLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
+        uint256 estNumMonthsHeld = numBlocksHeld / (7000 * 30);
         if (estNumMonthsHeld <= 4) {
             return 0;
         } else if (estNumMonthsHeld <= 12) {

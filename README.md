@@ -73,7 +73,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
   - Again, the goal here is to smash some of the transfer data into a pseudorandom number that adjusts over time in a loosely unpredictable way.
   - I know that the public can always spy on this value to decide if they want to burn on a specific day or not. I believe that (1) adding block difficulty and block number to the equation and (2) having this run whenever a transfer happens shake up enough of the public's control to make this inconvenient to force. You'd need to wait for the right week with the right address and then may get foiled by someone else transferring or burning in the middle. If someone _really_ wants to choose an outcome and goes through the effort to do so, I'm gonna call it part of the art.
   - That said, if this approach doesn't work for some reason, or if there are elements I haven't covered, please let me know so I can learn.
-- **`_opacityLevel`**:
+- **`_hiddenLevel_`**:
   - This is poorly named. I think I need to switch this to "transparency" or something.
   - This function takes in the number of blocks a given token was held by their current owner.
   - It uses that to determine the likelihood we skip this row in the poem. The idea here is that the longer a token is held, the more "faint" our path becomes.
@@ -91,7 +91,7 @@ The Poem contract is the most complex and is worth a more thorough explanation:
   - it uses the token's owner's address as a pseudo random number to decide which index we might be on. (Again, this is gameable, but I think I'm okay with that?)
 - **`_takeNextStep`**:
   - this function determines what step we should take next. It does so via the following steps:
-    1. determine the likelihood we skip this step (`_opacityLevel`)
+    1. determine the likelihood we skip this step (`_hiddenLevel_`)
     2. determine the likelihood we jump off our typical path (`_jitterLevel`)
     3. determine the likelihood we choose the left child
     4. determine the likelihood we choose the right child
