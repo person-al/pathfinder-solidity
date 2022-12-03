@@ -89,7 +89,7 @@ async function writeBatchFiles(tempFolder: string, poem: TestablePoem, admin: Si
       await poem.connect(admin).setHistoricalInput(showDiamond);
       const tokenId = Math.floor(Math.random() * 7);
       const jitterLevel = Math.floor(Math.random() * 30);
-      const hiddenLevel = Math.floor(Math.random() * 15);
+      const hiddenLevel = Math.floor(Math.random() * 100);
       const svg = await poem.connect(admin).getTestableSvg(tokenId, jitterLevel, hiddenLevel);
       htmlHead +=
         `<h1>showDiamond: ${
