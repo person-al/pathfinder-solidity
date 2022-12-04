@@ -79,15 +79,15 @@ abstract contract RenderableMetadata {
             string.concat(
                 '{"name": "Gem #',
                 uint2str(_tokenId),
-                '","description":"POEM is a collaborative poetry pathfinder. As gems are found, sold, and held, the path before us changes. To take the next step, we must burn a token. Let us see what we create together.", "image": "data:image/svg+xml;base64,',
+                '","image":"data:image/svg+xml;base64,',
                 _imageData,
-                '","attributes":[{ "trait_type": "energy",  "value": ',
+                '","description": "POEM is a collaborative poetry pathfinder. As gems are found, sold, and held, the path before us changes. To take the next step, we must burn a token. Let us see what we create together.","attributes": [{"trait_type":"energy","value":',
                 uint2str(100 - hiddenLevel),
-                '}, {"trait_type": "chaos", "value": ',
+                '},{"trait_type":"chaos","value":',
                 uint2str(jitterLevel),
-                '},{"trait_type": "poem", "value": ',
+                '},{"trait_type":"poem","value":"',
                 poem,
-                "}]}"
+                '"}]}'
             );
     }
 

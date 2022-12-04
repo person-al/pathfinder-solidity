@@ -58,7 +58,7 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
      * _mintPrice is denominated in wei
      *
      */
-    constructor(uint256 _mintPrice) ERC721A("PoemPathfinder", "POEM") {
+    constructor(uint256 _mintPrice) ERC721A("Pathfinder", "POEM") {
         _deployedBlockNumber = block.number;
         mintFee = _mintPrice;
     }
