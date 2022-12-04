@@ -55,7 +55,7 @@ abstract contract RenderableMetadata {
             uint2str(tokenId + 1),
             '" numOctaves="',
             jitterVal,
-            '"result="turbulence" /><feDisplacementMap  in2="turbulence"  in="SourceGraphic"  scale="',
+            '" result="turbulence" /><feDisplacementMap  in2="turbulence"  in="SourceGraphic"  scale="',
             jitterVal,
             '" /></filter></defs>'
         );
@@ -77,17 +77,17 @@ abstract contract RenderableMetadata {
         /* solhint-disable max-line-length */
         return
             string.concat(
-                '{"name": "Piece #',
+                '{"name": "Gem #',
                 uint2str(_tokenId),
-                '", "hiddenLevel": ',
-                uint2str(hiddenLevel),
-                ', "jitterLevel": ',
-                uint2str(jitterLevel),
-                ', "poem": "',
-                poem,
-                '", "description":"POEM is a collaborative poetry pathfinder. As tokens are minted, transferred, and held, the path before us changes. To take the next step, we must burn a token. Let us see what we create together.", "image": "data:image/svg+xml;base64,',
+                '","description":"POEM is a collaborative poetry pathfinder. As gems are found, sold, and held, the path before us changes. To take the next step, we must burn a token. Let us see what we create together.", "image": "data:image/svg+xml;base64,',
                 _imageData,
-                '"}'
+                '","attributes":[{ "trait_type": "energy",  "value": ',
+                uint2str(100 - hiddenLevel),
+                '}, {"trait_type": "chaos", "value": ',
+                uint2str(jitterLevel),
+                '},{"trait_type": "poem", "value": ',
+                poem,
+                "}]}"
             );
     }
 
