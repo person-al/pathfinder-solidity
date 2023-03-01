@@ -16,15 +16,15 @@ error OneCanHoldMax3Tokens(address to);
 contract Poem is ERC721A, Ownable, RenderableMetadata {
     uint8 internal constant MAX_NUM_JITTERS = 3;
     uint8 internal constant MAX_INDEX_VAL = 25;
+
     uint8 public constant MAX_NUM_NFTS = 7;
-    uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
-
-    uint256 private immutable _deployedBlockNumber;
-
-    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint8 public currStep = 0;
-    uint256 internal _historicalInput = 1;
+    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
     uint256 public mintFee; // In wei
+
+    uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+    uint256 private immutable _deployedBlockNumber;
+    uint256 internal _historicalInput = 1;
     uint256[26] internal _nodes = [
         0,
         909926238360867929735398212882603035651154206890943763432627265628419941664,
