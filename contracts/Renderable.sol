@@ -43,13 +43,19 @@ abstract contract RenderableMetadata {
     ) internal view returns (string memory) {
         uint16 blur = 100 - hiddenLevel;
         string memory opacity = string.concat("0.", uint2str(blur));
+        string memory transformString = "";
         if (blur == 100) {
             opacity = "1";
+        }
+        if (_shouldRenderDiamond) {
+            transformString = ' transform-origin="center" transform="rotate(45)scale(0.66)"';
+        } else {
+            transformString = "";
         }
         string memory jitterVal = uint2str(jitterLevel * 10);
         string memory id = uint2str(uint16(uint256(keccak256(abi.encode(jitterLevel, hiddenLevel, tokenId)))));
         string memory svgString = string.concat(
-            '<svg xmlns="http://www.w3.org/2000/svg" height="100%" width="100%" viewBox="0 0 800 800" style="background:#1a1a1a"><defs><filter id="adj',
+            '<svg xmlns="http://www.w3.org/2000/svg" height="100%" width="100%" viewBox="0 0 800 800"><defs><filter id="adj',
             id,
             '" x="0" y="0"><feTurbulence type="turbulence" baseFrequency="0.001" seed="',
             uint2str(tokenId + 1),
@@ -57,7 +63,9 @@ abstract contract RenderableMetadata {
             jitterVal,
             '" result="turbulence" /><feDisplacementMap  in2="turbulence"  in="SourceGraphic"  scale="',
             jitterVal,
-            '" /></filter></defs>'
+            '" /></filter></defs><g',
+            transformString,
+            '><style>.a{fill:#640202;stroke:#600000;stroke-width:14}.b{fill:#600000}</style><path class="a" d="m7 7h786v786h-786z"/><path class="a" d="m150 150h500v500h-500z"/><path class="b" d="m13.7 795.3l-9.8-9.9 143.4-142.8 9.9 10z"/><path class="b" d="m4.5 14.3l10-9.8 143.4 144.9-9.9 9.8z"/><path class="b" d="m793.6 784.7l-9.9 9.9-142.8-143.5 10-9.9z"/><path class="b" d="m655.5 152.8l-9.9-9.9 139.2-137.6 9.9 9.9z"/></g>'
         );
         if (_shouldRenderDiamond) {
             svgString = string.concat(svgString, renderDiamond(path, currStep, opacity, id));
@@ -104,13 +112,13 @@ abstract contract RenderableMetadata {
             opacity,
             "} .node",
             id,
-            "-default{color:#a9a9a9;} .node",
+            "-default{color:#b67272;} .node",
             id,
-            "-notSelected{color:#555555;} .node",
+            "-notSelected{color:#965252;} .node",
             id,
             "-selected{color:white;} .node",
             id,
-            '-hidden{color:#333333;text-decoration:line-through;}</style><svg filter="url(#adj',
+            '-hidden{color:#500000;text-decoration:line-through;}</style><svg filter="url(#adj',
             id,
             ')">'
         );
