@@ -9,6 +9,19 @@ import type { TestablePoem__factory } from "../../src/types/factories/contracts/
 
 const DESTINATION = path.join(os.tmpdir(), "poem-svg-render-");
 
+const chooseRandom = (arr: any[], num = 1) => {
+  const res = [];
+  for (let i = 0; i < num; ) {
+    const random = Math.floor(Math.random() * arr.length);
+    if (res.indexOf(arr[random]) !== -1) {
+      continue;
+    }
+    res.push(arr[random]);
+    i++;
+  }
+  return res;
+};
+
 export async function renderAllPossibleSVGs() {
   const _signers: SignerWithAddress[] = await ethers.getSigners();
   const admin = _signers[0];
@@ -49,9 +62,7 @@ export async function renderAllPossibleSVGs() {
     results = newResults;
   });
 
-  // console.log('got all possible results');
-
-  await writeBatchFiles(tempFolder, poem, admin, results.slice(0, 100));
+  await writeBatchFiles(tempFolder, poem, admin, chooseRandom(results, 100));
 }
 
 async function writeBatchFiles(tempFolder: string, poem: TestablePoem, admin: SignerWithAddress, paths: number[][]) {
@@ -76,10 +87,44 @@ async function writeBatchFiles(tempFolder: string, poem: TestablePoem, admin: Si
       await poem.connect(admin).setPath(p);
       await poem.connect(admin).setCurrStep(currStep);
       await poem.connect(admin).setHistoricalInput(showDiamond);
-      const svg = await poem.connect(admin).getSvg();
-      htmlHead += `<h1>showDiamond: ${(showDiamond >> 3) % 2 == 1} - currStep: ${currStep}- ${p}</h1>${svg}<br/>`;
+      const tokenId = Math.floor(Math.random() * 7);
+      const jitterLevel = Math.floor(Math.random() * 30);
+      const hiddenLevel = Math.floor(Math.random() * 100);
+      const svg = await poem.connect(admin).getTestableSvg(tokenId, jitterLevel, hiddenLevel);
+      htmlHead +=
+        `<h1>showDiamond: ${
+          (showDiamond >> 3) % 2 == 1
+        } - tokenId: ${tokenId} jitterLevel: ${jitterLevel} hiddenLevel: ${hiddenLevel} currStep: ${currStep}- ${p}</h1>` +
+        `<div style="width: 500px;height: 500px;">${svg}</div><br/>`;
     }
     fs.writeFileSync(fileName, `${htmlHead}</html>`);
     console.log(`wrote batch ${i} with paths less than ${k}`);
   }
+}
+
+async function writeOneFile(tempFolder: string, poem: TestablePoem, admin: SignerWithAddress, paths: number[][]) {
+  const numPaths = paths.length;
+  console.log(`gonna write files to cover ${numPaths} potential paths`);
+  const fileName = path.join(tempFolder, "oneimage.html");
+  let htmlHead = `<html lang="en">
+        <head>
+        <meta http-equiv="Content-Type" 
+            content="text/html; charset=utf-8">
+        </head>`;
+  const p = paths[0];
+  const currStep = Math.floor(Math.random() * 9);
+  const showDiamond = 8;
+  await poem.connect(admin).setPath(p);
+  await poem.connect(admin).setCurrStep(currStep);
+  await poem.connect(admin).setHistoricalInput(showDiamond);
+  const tokenId = Math.floor(Math.random() * 7);
+  const jitterLevel = 0;
+  const hiddenLevel = 0;
+  const svg = await poem.connect(admin).getTestableSvg(tokenId, jitterLevel, hiddenLevel);
+  htmlHead +=
+    `<h1>showDiamond: ${
+      (showDiamond >> 3) % 2 == 1
+    } - tokenId: ${tokenId} jitterLevel: ${jitterLevel} hiddenLevel: ${hiddenLevel} currStep: ${currStep}- ${p}</h1>` +
+    `<div style="width: 500px;height: 500px;">${svg}</div><br/>`;
+  fs.writeFileSync(fileName, `${htmlHead}</html>`);
 }

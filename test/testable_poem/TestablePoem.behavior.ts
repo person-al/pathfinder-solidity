@@ -3,17 +3,21 @@ import { expect } from "chai";
 export function shouldBehaveLikeTestablePoem(): void {
   describe("TestablePoem getters", function () {
     it("throws require when getting a Node that doesn't exist", async function () {
-      await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getLeftChild(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getRightChild(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getRightChild(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getValueBytes(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getValueBytes(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
-      await expect(this.poem.connect(this.signers.admin).getJitterKids(0)).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
+      await expect(this.poem.connect(this.signers.admin).getJitterKids(0)).to.be.revertedWithCustomError(
+        this.poem,
+        "InvalidIndexMin1Max25",
       );
     });
 
@@ -57,13 +61,13 @@ export function shouldBehaveLikeTestablePoem(): void {
 
   describe("TestablePoem packing and unpacking", function () {
     it("errors out if packed with invalid index", async function () {
-      await expect(this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [0, 0, 0])).to.be.revertedWith(
-        "Use a positive, non-zero index for your nodes.",
-      );
+      await expect(
+        this.poem.connect(this.signers.admin).packNode(0, "hello", 2, 3, [0, 0, 0]),
+      ).to.be.revertedWithCustomError(this.poem, "InvalidIndexMin1Max25");
 
-      await expect(this.poem.connect(this.signers.admin).packNode(26, "hello", 2, 3, [0, 0, 0])).to.be.revertedWith(
-        "Cannot support more than 25 nodes.",
-      );
+      await expect(
+        this.poem.connect(this.signers.admin).packNode(26, "hello", 2, 3, [0, 0, 0]),
+      ).to.be.revertedWithCustomError(this.poem, "InvalidIndexMin1Max25");
     });
 
     it("supports 0-index for left and right children", async function () {
@@ -139,11 +143,29 @@ export function shouldBehaveLikeTestablePoem(): void {
       await this.poem.connect(this.signers.admin).packNode(14, "hello", 0, 16, [15, 0, 0]);
       await this.poem.connect(this.signers.admin).packNode(15, "hello", 16, 0, [14, 0, 0]);
       await this.poem.connect(this.signers.admin).packNode(16, "hello", 0, 0, [0, 0, 0]);
+
+      expect(await this.poem.connect(this.signers.admin).getValueString(1)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(2)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(3)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(4)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(5)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(6)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(7)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(8)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(9)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(10)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(11)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(12)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(13)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(14)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(15)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(16)).to.equal("hello");
     });
 
     // To be used when generating numbers to deploy contract with
-    it.skip("initializes and prints", async function () {
+    it("initializes and prints", async function () {
       await this.poem.connect(this.signers.admin).initialize();
+      expect(await this.poem.connect(this.signers.admin).getValueString(1)).to.equal("As he ");
       console.log(await this.poem.connect(this.signers.admin).getNodes());
     });
   });

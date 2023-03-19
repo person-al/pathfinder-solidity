@@ -7,8 +7,8 @@ import os from "os";
 import path from "path";
 import { DOMParser } from "xmldom";
 
-import type { Poem } from "../../src/types/contracts/Poem.sol/Poem";
-import type { Poem__factory } from "../../src/types/factories/contracts/Poem.sol/Poem__factory";
+import type { Poem } from "../../src/types/contracts/Poem";
+import type { Poem__factory } from "../../src/types/factories/contracts/Poem__factory";
 import type { Signers } from "../types";
 
 const DESTINATION = path.join(os.tmpdir(), "poem-svg-render-");
@@ -107,7 +107,7 @@ export function simulateContractLifecycle(
               debug && console.log("User has minted before");
               break;
             }
-            await this.poem.connect(randomUser).mint(false);
+            await this.poem.connect(randomUser).mint();
             const a = userToToken.get(randomUser) || [];
             a.push(currToken);
             userToToken.set(randomUser, a);
@@ -218,7 +218,7 @@ async function writeSvg(
 ) {
   const fileName = path.join(tempFolder, _fileName + ".html");
   console.log("Rendering", fileName);
-  const svg = await poem.connect(admin).getSvg();
+  const svg = await poem.connect(admin).getDefaultSvg();
   const currStep = await poem.connect(admin).currStep();
   fs.writeFileSync(
     fileName,

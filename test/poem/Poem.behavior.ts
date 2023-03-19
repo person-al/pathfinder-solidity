@@ -12,85 +12,91 @@ export function shouldBehaveLikePoem(): void {
   describe("Poem Minting Requirements", function () {
     // TODO: minting price
     it("doesn't allow minting if you've done so before", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
-      await expect(this.poem.connect(this.signers.admin).mint(false)).to.be.revertedWith("You can only mint 1 token.");
+      await this.poem.connect(this.signers.admin).mint();
+      await expect(this.poem.connect(this.signers.admin).mint()).to.be.revertedWithCustomError(
+        this.poem,
+        "YouCanOnlyMint1Token",
+      );
     });
 
     it("doesn't allow minting if you already hold three tokens", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
-      await this.poem.connect(this.signers.others[0]).mint(false);
+      await this.poem.connect(this.signers.others[0]).mint();
       this.poem
         .connect(this.signers.others[0])
         .transferFrom(this.signers.others[0].address, this.signers.user.address, 1);
-      await this.poem.connect(this.signers.others[1]).mint(false);
+      await this.poem.connect(this.signers.others[1]).mint();
       this.poem
         .connect(this.signers.others[1])
         .transferFrom(this.signers.others[1].address, this.signers.user.address, 2);
 
-      await expect(this.poem.connect(this.signers.user).mint(false)).to.be.revertedWith(
-        "One can hold max 3 tokens at a time.",
+      await expect(this.poem.connect(this.signers.user).mint()).to.be.revertedWithCustomError(
+        this.poem,
+        "OneCanHoldMax3Tokens",
       );
     });
 
     it("doesn't allow minting if it's out of tokens", async function () {
       const maxNum = await this.poem.connect(this.signers.admin).MAX_NUM_NFTS();
       for (let i = 0; i < maxNum; i++) {
-        await this.poem.connect(this.signers.others[i]).mint(false);
+        await this.poem.connect(this.signers.others[i]).mint();
       }
-      await expect(this.poem.connect(this.signers.user).mint(false)).to.be.revertedWith("Out of tokens.");
+      await expect(this.poem.connect(this.signers.user).mint()).to.be.revertedWithCustomError(this.poem, "OutOfTokens");
     });
 
     it("allows minting if all conditions are met", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
     });
 
     it("on mint, update historicalInput", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).getHistoricalInput()).to.not.equal(1);
     });
 
     it("on mint, update ownership", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
-      await this.poem.connect(this.signers.user).mint(false);
+      await this.poem.connect(this.signers.user).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.user.address)).to.equal(1);
     });
 
     it("on mint, update owner count", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
-      await this.poem.connect(this.signers.user).mint(false);
+      await this.poem.connect(this.signers.user).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.user.address)).to.equal(1);
     });
 
     it("on mint, update transfer timestamp", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
+      await this.poem.connect(this.signers.admin).mint();
+      // Time 1 is the initialize call made in the beforeEach loop. This is time 2.
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
     });
   });
 
   describe("Poem Transfer requirements", function () {
     it("on transfer, update historicalInput", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       const oldPseudoRandomNumber = await this.poem.connect(this.signers.admin).getHistoricalInput();
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
       expect(await this.poem.connect(this.signers.admin).getHistoricalInput()).to.not.equal(oldPseudoRandomNumber);
     });
 
     it("on transfer, update transfer timestamp", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
+      await this.poem.connect(this.signers.admin).mint();
+      // Time 1 is the initialize call made in the beforeEach loop. This is time 2.
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
       expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(0);
 
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(2);
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(3);
     });
 
     it("on transfer, update ownership and owner count", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
       expect(await this.poem.connect(this.signers.user).balanceOf(this.signers.admin.address)).to.equal(0);
@@ -99,39 +105,39 @@ export function shouldBehaveLikePoem(): void {
     });
 
     it("doesn't allow transfer if receiver already hold three tokens", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       await this.poem
         .connect(this.signers.admin)
         .transferFrom(this.signers.admin.address, this.signers.user.address, 0);
 
-      await this.poem.connect(this.signers.others[0]).mint(false);
+      await this.poem.connect(this.signers.others[0]).mint();
       await this.poem
         .connect(this.signers.others[0])
         .transferFrom(this.signers.others[0].address, this.signers.user.address, 1);
 
-      await this.poem.connect(this.signers.others[1]).mint(false);
+      await this.poem.connect(this.signers.others[1]).mint();
       await this.poem
         .connect(this.signers.others[1])
         .transferFrom(this.signers.others[1].address, this.signers.user.address, 2);
 
-      await this.poem.connect(this.signers.others[2]).mint(false);
+      await this.poem.connect(this.signers.others[2]).mint();
       await expect(
         this.poem
           .connect(this.signers.others[2])
           .transferFrom(this.signers.others[2].address, this.signers.user.address, 3),
-      ).to.be.revertedWith("One can hold max 3 tokens at a time.");
+      ).to.be.revertedWithCustomError(this.poem, "OneCanHoldMax3Tokens");
     });
   });
 
   describe("Poem Burn requirements", function () {
     it("on burn, update ownership", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       await this.poem.connect(this.signers.admin).burn(0);
       expect(await this.poem.connect(this.signers.user).balanceOf(this.signers.admin.address)).to.equal(0);
     });
 
     it("on burn, update historicalInput", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       const num = await this.poem.connect(this.signers.admin).getHistoricalInput();
       expect(num).to.not.equal(1);
       await this.poem.connect(this.signers.admin).burn(0);
@@ -139,7 +145,7 @@ export function shouldBehaveLikePoem(): void {
     });
 
     it("on burn, update currStep and path", async function () {
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).currStep()).to.equal(0);
       expect(await this.poem.connect(this.signers.admin).path(0)).to.equal(1);
       for (let i = 1; i < 8; i++) {
@@ -176,9 +182,9 @@ export function shouldBehaveLikePoem(): void {
     it("transferring multiple times properly updates block timestamp");
   });
 
-  describe("Poem opacityLevel", function () {
-    it("opacityLevel can handle an extremely large numBlocksHeld");
-    it("opacityLevel returns the correct value for all levels");
+  describe("Poem hiddenLevel", function () {
+    it("hiddenLevel can handle an extremely large numBlocksHeld");
+    it("hiddenLevel returns the correct value for all levels");
   });
 
   describe("Poem jitterLevel", function () {
@@ -201,8 +207,8 @@ export function shouldBehaveLikePoem(): void {
   describe("Poem takeNextStep", function () {
     it("should be opaque", async function () {
       // start by minting
-      await this.poem.connect(this.signers.admin).mint(false);
-      // update to block number... 1365000 which gets us to 15% opacityLevel
+      await this.poem.connect(this.signers.admin).mint();
+      // update to block number... 1365000 which gets us to 15% hiddenLevel
       await mineUpTo(1365000);
       // set historical seed to something such that (historicalInput + this.signers.admin) % 100 = 87
       await this.poem
@@ -219,7 +225,7 @@ export function shouldBehaveLikePoem(): void {
 
     it("should take left step", async function () {
       // start by minting, next block number is 2
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       // at this point, the values will be... [50,100]
       // set historical seed to something such that (historicalInput + this.signers.admin) % 100 = 0
       await this.poem
@@ -236,7 +242,7 @@ export function shouldBehaveLikePoem(): void {
 
     it("should take right step", async function () {
       // start by minting, next block number is 2
-      await this.poem.connect(this.signers.admin).mint(false);
+      await this.poem.connect(this.signers.admin).mint();
       // at this point, the values will be... [50,100]
       // set historical seed to something such that (historicalInput + this.signers.admin) % 100 = 59
       await this.poem
@@ -255,7 +261,7 @@ export function shouldBehaveLikePoem(): void {
       beforeEach(async function () {
         // mint 3 tokens and burn all of them
         for (let i = 0; i < 3; i++) {
-          await this.poem.connect(this.signers.others[i]).mint(false);
+          await this.poem.connect(this.signers.others[i]).mint();
           // set historical seed so we always choose the left child
           await this.poem
             .connect(this.signers.admin)
@@ -266,7 +272,7 @@ export function shouldBehaveLikePoem(): void {
           await this.poem.connect(this.signers.others[i]).burn(i);
         }
         // Now mint the 4th token. It has 3 kids to choose from when jittering
-        await this.poem.connect(this.signers.admin).mint(false);
+        await this.poem.connect(this.signers.admin).mint();
         // pass it back and forth 8 times so that jitterLevel is 10
         const fromUser = [this.signers.admin, this.signers.user];
         const toUser = [this.signers.user, this.signers.admin];

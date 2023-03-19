@@ -4,80 +4,74 @@ pragma solidity >=0.8.12;
 import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
-import "./Renderable.sol";
+import "./TestnetRenderable.sol";
 
-/// Index should be > 0 and <= MAX_INDEX_VAL
-error InvalidIndexMin1Max25();
-error MintFeeNotMet();
-error OutOfTokens();
-error YouCanOnlyMint1Token();
-error OneCanHoldMax3Tokens(address to);
+interface IERC2981 {
+    function royaltyInfo(uint256 _tokenId, uint256 _salePrice)
+        external
+        view
+        returns (address receiver, uint256 royaltyAmount);
+}
 
-contract Poem is ERC721A, Ownable, RenderableMetadata {
-    uint8 internal constant MAX_NUM_JITTERS = 3;
-    uint8 internal constant MAX_INDEX_VAL = 25;
-
+contract TestnetPoem is ERC721A, Ownable, IERC2981, TestnetRenderableMetadata {
+    uint8 public constant MAX_NUM_JITTERS = 3;
+    uint8 public constant MAX_INDEX_VAL = 25;
     uint8 public constant MAX_NUM_NFTS = 7;
-    uint8 public currStep = 0;
-    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
-    uint256 public mintFee; // In wei
-
     uint256 private constant VALUE_FILTER = 0x0000000000ffffffffffffffffffffffffffffffffffffffffffffffffffffff;
+
     uint256 private immutable _deployedBlockNumber;
+
+    // Does the order matter? Should I define these near the other uint8s?
+    uint8[9] public path = [1, 0, 0, 0, 0, 0, 0, 0, 25];
+    uint8 public currStep = 0;
     uint256 internal _historicalInput = 1;
+    uint256 public _mintFee; // In wei
     uint256[26] internal _nodes = [
         0,
-        909926238360867929735398212882603035651154206890943765045016467916676687136,
-        1818085630288831225152556248451971318888503523798382480310458815959332643872,
-        2272165325726251414518349332747065322088826020657626361746610005128180491296,
-        3180324987148369089773348128288666447838811641617754937016204995381191602720,
-        3634404682585789279139141212583760451039134138476998818452362667201525675808,
-        4088484324313940717540769080940660335567536152699603319147591701831350580000,
-        4996747404196785874318577574518732436239457003206005123780796073656619314208,
-        5450827099634206063684370490145147299504781135953138366136996742706988788768,
-        5904906741362357502085998358502047184033180789182506683369869381085680643104,
-        6358972633517708693661330946681252721694745114521562559116258182992763956256,
-        28401173286392137062282498244147996712585797453844752906497297566288129312,
-        7267042491568102673472288079791435007277491848695416039695757951770697739552,
-        7721122187005522862838081164086529010477816686302650906528229574704811027744,
-        8175201828733674301239709032443428895006216368920813013741776612273540640032,
-        8594068814520393617499167544906726529559004267002573124180864310697404476704,
-        35337536625952488945442353345468866105503576651486680613904023256224917280,
-        9083360762342544255095990558673540698909844224853249627178106287697995654944,
-        9537440457779964444461783642968634702110166721712493045804330008850255996704,
-        9950883237096986387747710946728864883886123773160573567615668309188887737120,
-        40637485017397839625788323267119790272122513636518100172476145866495897120,
-        10445599847013189259733731396253629037175415391554223306187261971216655134240,
-        10855508368420576029336636817905695204924795288228489930808958924893436653088,
-        44171176619459608239582437518572962895687097421890867835206555903583413280,
-        11307821214581659709333104004754678501295896940003961333516881900789037365024,
-        599231521422541571779177849951840302
+        909926238360867929735398212882603035651154206890943763432627265628419941664,
+        1818085630288831225152556248451971318888503523798382480318670550428524307488,
+        2272165325726251414518349332747065322088826020657626361753819989959403463712,
+        3180324987148369089773348128288666447838811641617614208638020369611860767520,
+        3634404682585789279139141212583760451039134138476858583137030637339093005088,
+        4088484324313940717540769080940660335567536152699603319147880213682479002400,
+        4996747404196785874318577405850053296304456278064491627768569074979230526496,
+        5450827099634206063684370490145147299505383335278118719355313680067884952608,
+        5904906741362357502085998358502047184033180789146480233733677844117077961760,
+        6358972633517708693661330946683849285079837964484281646812318644041703173152,
+        28401173286392137062282498244147996712585788310297368222521403865233190432,
+        7267042491568102673472288079791435007277491848695276522382272216462879777824,
+        7721122187005522862838081164086529010477816706585060482103526844235668026144,
+        8175201828733674301239709033108001331624392849233692055307543228010251776544,
+        8594068814520393617499124365727618858396950975904160398476206872148189541152,
+        35337536625952488945442353345468866105503576651487143313660503028163503136,
+        9083360762342544255095990558673540698909844224853249164312911225587916694560,
+        9537440457779964444461783642968634702110166721712493522744180277778267598368,
+        9950883237096986387747710946149794462226042099961420753510984315443664479264,
+        40637485017397839625788323267119790410909743057208080281411575484228316704,
+        10445599846969808156496454824392134265572084798328785506672366718191527996960,
+        10855508368420576029336595138616605997968481005738390565983096147756436368928,
+        44171176619459608239582437518572962895687103158953280726063294786640307488,
+        11307821214581659709333104004754678501295898408692039780574742603076044219680,
+        2662277745920782326914498756153016221122324270
     ];
 
     /**
      * _mintPrice is denominated in wei
      *
      */
-    constructor(uint256 _mintPrice) ERC721A("Pathfinder", "POEM") {
+    constructor(uint256 _mintPrice) ERC721A("PoemPathfinder", "POEM") {
         _deployedBlockNumber = block.number;
-        mintFee = _mintPrice;
+        _mintFee = _mintPrice;
     }
 
     // ========= VALIDATION =========
     function indexIsValid(uint256 _index) internal pure {
-        if (_index <= 0 || _index > MAX_INDEX_VAL) {
-            revert InvalidIndexMin1Max25();
-        }
+        require(_index > 0, "Use a positive, non-zero index for your nodes.");
+        require(_index <= MAX_INDEX_VAL, "Cannot support more than 25 nodes.");
     }
 
     // ========= PAYMENTS =========
     // withdraw funds, royalties
-
-    event ThankYou(address);
-
-    function tipTheCreator() external payable {
-        emit ThankYou(msg.sender);
-    }
 
     function withdrawAllEth() external {
         payable(owner()).transfer(address(this).balance);
@@ -87,73 +81,39 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
         _erc20Token.transfer(owner(), _erc20Token.balanceOf(address(this)));
     }
 
+    function supportsInterface(bytes4 _interfaceId) public view override returns (bool) {
+        return _interfaceId == type(IERC2981).interfaceId || super.supportsInterface(_interfaceId);
+    }
+
+    function royaltyInfo(uint256, uint256 _salePrice) external view override returns (address, uint256) {
+        return (owner(), _salePrice / 100);
+    }
+
     function updateMintFee(uint256 mintFeeWei) external onlyOwner {
-        mintFee = mintFeeWei;
+        _mintFee = mintFeeWei;
     }
 
     // ========= PUBLIC FUNCTIONS =========
     // mint, burn, tokenURI, SVG
 
-    function totalMinted() external view returns (uint256) {
-        return _totalMinted();
-    }
-
-    function totalBurned() external view returns (uint256) {
-        return _totalBurned();
-    }
-
-    function totalMintedTo(address to) external view returns (uint256) {
-        return _numberMinted(to);
-    }
-
     function tokenURI(uint256 _tokenId) public view override returns (string memory) {
         if (!_exists(_tokenId)) revert URIQueryForNonexistentToken(); // do we want this check?
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint64 lastTransferBlockNumber = _getAux(info.addr);
-        uint24 numOwners = info.extraData;
-        uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-
-        return
-            _getTokenUri(
-                _tokenId,
-                currStep,
-                path,
-                _jitterLevel(numOwners),
-                _hiddenLevel(numBlocksHeld),
-                _shouldRenderDiamond()
-            );
+        return _getTokenUri(_tokenId, currStep, path, _shouldRenderDiamond());
     }
 
-    function getDefaultSvg() external view returns (string memory) {
-        return _getSvg(0, currStep, path, 0, 0, _shouldRenderDiamond());
+    function getSvg() external view returns (string memory) {
+        return _getSvg(currStep, path, _shouldRenderDiamond());
     }
 
-    function getHiddenLevel(uint8 _tokenId) external view returns (uint8) {
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint64 lastTransferBlockNumber = _getAux(info.addr);
-
-        uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-        return _hiddenLevel(numBlocksHeld);
-    }
-
-    function getJitterLevel(uint8 _tokenId) external view returns (uint8) {
-        TokenOwnership memory info = _ownershipOf(_tokenId);
-        uint24 numOwners = info.extraData;
-
-        return _jitterLevel(numOwners);
-    }
-
-    function mint() external payable {
-        if (msg.value != mintFee) {
-            revert MintFeeNotMet();
+    function mint(bool keepTheChange) external payable {
+        if (keepTheChange) {
+            require(msg.value >= _mintFee, "Wrong price");
+        } else {
+            require(msg.value == _mintFee, "Wrong price");
         }
         address to = msg.sender;
-        if (_totalMinted() >= MAX_NUM_NFTS) {
-            revert OutOfTokens();
-        }
-        if (_numberMinted(to) != 0) {
-            revert YouCanOnlyMint1Token();
-        }
+        require(_totalMinted() < MAX_NUM_NFTS, "Out of tokens.");
+        require(_numberMinted(to) == 0, "You can only mint 1 token.");
         _safeMint(to, 1);
     }
 
@@ -162,6 +122,11 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
     }
 
     // ========= HOOKS=========
+    // beforeTransfer, afterTransfer
+
+    // TODO: prevent transferring to contracts? Or does it matter?
+    // TODO: Do I have a re-entrancy risk on minting, burning, or transferring?
+
     function _beforeTokenTransfers(
         address,
         address to,
@@ -177,9 +142,7 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
             }
         } else {
             // If we're not burning, the receiver can only hold 3 tokens at a time.
-            if (balanceOf(to) > 2) {
-                revert OneCanHoldMax3Tokens(to);
-            }
+            require(balanceOf(to) <= 2, "One can hold max 3 tokens at a time.");
         }
     }
 
@@ -201,9 +164,11 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
             //      Because we only have 64 bits, we can't store the full block number.
             //      Instead, we'll store the difference between this block and the deploy block.
             //      That's enough bits to store roughly 77M centuries from deployment.
+            uint64 maxVal = 18446744073709551615;
             uint256 newBlockNumber = block.number - _deployedBlockNumber;
-            // Unchecked because we can let it wrap around to zero after 77M centuries
-            unchecked {
+            if (newBlockNumber >= maxVal) {
+                _setAux(to, maxVal);
+            } else {
                 _setAux(to, uint64(newBlockNumber));
             }
         } else {
@@ -270,7 +235,7 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
 
         // 1: figure out opacity
         uint256 numBlocksHeld = block.number - _deployedBlockNumber - lastTransferBlockNumber;
-        uint8 hiddenPercentage = _hiddenLevel(numBlocksHeld);
+        uint8 hiddenPercentage = _opacityLevel(numBlocksHeld);
         if (hiddenPercentage == 100) {
             currStep += 1;
             return;
@@ -379,12 +344,8 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
         return _preferNonZeroVal(left, right, right);
     }
 
-    function _numBlocksToEstMonths(uint256 numBlocks) internal pure returns (uint256) {
-        return numBlocks / (7000 * 30);
-    }
-
-    function _hiddenLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
-        uint256 estNumMonthsHeld = _numBlocksToEstMonths(numBlocksHeld);
+    function _opacityLevel(uint256 numBlocksHeld) internal pure returns (uint8) {
+        uint256 estNumMonthsHeld = numBlocksHeld / (7000 * 30);
         if (estNumMonthsHeld <= 4) {
             return 0;
         } else if (estNumMonthsHeld <= 12) {
