@@ -54,6 +54,7 @@ abstract contract RenderableMetadata {
         }
         string memory jitterVal = uint2str(jitterLevel * 10);
         string memory id = uint2str(uint16(uint256(keccak256(abi.encode(jitterLevel, hiddenLevel, tokenId)))));
+        /* solhint-disable max-line-length */
         string memory svgString = string.concat(
             '<svg xmlns="http://www.w3.org/2000/svg" height="100%" width="100%" viewBox="0 0 800 800"><defs><filter id="adj',
             id,
