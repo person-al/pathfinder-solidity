@@ -143,11 +143,29 @@ export function shouldBehaveLikeTestablePoem(): void {
       await this.poem.connect(this.signers.admin).packNode(14, "hello", 0, 16, [15, 0, 0]);
       await this.poem.connect(this.signers.admin).packNode(15, "hello", 16, 0, [14, 0, 0]);
       await this.poem.connect(this.signers.admin).packNode(16, "hello", 0, 0, [0, 0, 0]);
+
+      expect(await this.poem.connect(this.signers.admin).getValueString(1)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(2)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(3)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(4)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(5)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(6)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(7)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(8)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(9)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(10)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(11)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(12)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(13)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(14)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(15)).to.equal("hello");
+      expect(await this.poem.connect(this.signers.admin).getValueString(16)).to.equal("hello");
     });
 
     // To be used when generating numbers to deploy contract with
-    it.skip("initializes and prints", async function () {
+    it("initializes and prints", async function () {
       await this.poem.connect(this.signers.admin).initialize();
+      expect(await this.poem.connect(this.signers.admin).getValueString(1)).to.equal("As he ");
       console.log(await this.poem.connect(this.signers.admin).getNodes());
     });
   });

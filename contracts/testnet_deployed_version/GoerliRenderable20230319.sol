@@ -207,10 +207,10 @@ abstract contract RenderableMetadata {
                 value,
                 Svg.prop("class", getTextClass(pathVal, currStep, index, row, id)),
                 string.concat(
-                    Svg.prop("x", uint2str(column * 80 - 60)),
+                    Svg.prop("x", uint2str(column * 80 - 40)),
                     Svg.prop("y", uint2str(row * 75)),
-                    Svg.prop("width", "120"),
-                    Svg.prop("height", "70")
+                    Svg.prop("width", "130"),
+                    Svg.prop("height", "60")
                 )
             );
     }

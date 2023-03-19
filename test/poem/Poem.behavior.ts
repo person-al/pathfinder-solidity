@@ -71,7 +71,8 @@ export function shouldBehaveLikePoem(): void {
 
     it("on mint, update transfer timestamp", async function () {
       await this.poem.connect(this.signers.admin).mint();
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
+      // Time 1 is the initialize call made in the beforeEach loop. This is time 2.
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
     });
   });
 
@@ -85,12 +86,13 @@ export function shouldBehaveLikePoem(): void {
 
     it("on transfer, update transfer timestamp", async function () {
       await this.poem.connect(this.signers.admin).mint();
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
+      // Time 1 is the initialize call made in the beforeEach loop. This is time 2.
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
       expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(0);
 
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(1);
-      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(2);
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.admin.address)).to.equal(2);
+      expect(await this.poem.connect(this.signers.admin).lastTransferedAt(this.signers.user.address)).to.equal(3);
     });
 
     it("on transfer, update ownership and owner count", async function () {

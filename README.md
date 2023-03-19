@@ -1,4 +1,4 @@
-**Launched on Rinkeby:** [Mint](https://rinkeby.etherscan.io/address/0xdee90ccc0ebd4b1cf3373621946b8fee22660f47#writeContract) | [View Collection on OpenSea](https://testnets.opensea.io/collection/poempathfinder) | [Get Rinkeby Eth](https://rinkebyfaucet.com/)
+**Launched on Goerli:** [Mint](https://person-al.github.io/out/pathfinder/) | [View Collection on OpenSea](https://testnets.opensea.io/collection/pathfinder)
 
 # Poetry through history
 

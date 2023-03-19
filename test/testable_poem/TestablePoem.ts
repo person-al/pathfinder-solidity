@@ -24,6 +24,7 @@ describe("TestablePoem", function () {
   beforeEach(async function () {
     const { poem } = await this.loadFixture(deployTestablePoemFixture);
     this.poem = poem;
+    await this.poem.connect(this.signers.admin).initialize();
   });
 
   shouldBehaveLikeTestablePoem();
