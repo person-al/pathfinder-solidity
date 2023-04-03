@@ -102,7 +102,7 @@ async function writeBatchFiles(tempFolder: string, poem: TestablePoem, admin: Si
   }
 }
 
-async function writeOneFile(tempFolder: string, poem: TestablePoem, admin: SignerWithAddress, paths: number[][]) {
+async function _writeOneFile(tempFolder: string, poem: TestablePoem, admin: SignerWithAddress, paths: number[][]) {
   const numPaths = paths.length;
   console.log(`gonna write files to cover ${numPaths} potential paths`);
   const fileName = path.join(tempFolder, "oneimage.html");

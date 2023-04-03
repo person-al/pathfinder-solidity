@@ -54,6 +54,7 @@ function getChainConfig(chain: keyof typeof chainIds): NetworkUserConfig {
   };
 }
 
+// nonce was 0 last time: https://etherscan.io/tx/0xb295201c34098a2ed65ada7e2548d67545c54ef575b70b62a2eac85328ab91ef
 const config: HardhatUserConfig = {
   defaultNetwork: "hardhat",
   etherscan: {
@@ -94,7 +95,6 @@ const config: HardhatUserConfig = {
       url: `https://eth-rinkeby.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts: [process.env.TESTNET_PRIVATE_KEY as string],
     },
-    // rinkeby: getChainConfig("rinkeby"),
     goerli: {
       url: `https://eth-goerli.alchemyapi.io/v2/${process.env.ALCHEMY_API_KEY}`,
       accounts: [process.env.TESTNET_PRIVATE_KEY as string],

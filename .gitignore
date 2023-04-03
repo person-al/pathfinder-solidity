@@ -24,3 +24,6 @@ coverage.json
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+deployed.txt
+deploy_bash.sh
+logs.txt

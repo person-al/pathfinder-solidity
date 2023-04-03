@@ -1,12 +1,58 @@
+import { BigNumber } from "@ethersproject/bignumber";
 import { mineUpTo } from "@nomicfoundation/hardhat-network-helpers";
 import { expect } from "chai";
 
 export function shouldBehaveLikePoem(): void {
+  describe("Poem getters", async function () {
+    it("claims to support the interfaces it does support", async function () {
+      expect(await this.poem.connect(this.signers.admin).supportsInterface(0x49064906)).equals(true);
+      expect(await this.poem.connect(this.signers.admin).supportsInterface(0x01ffc9a7)).equals(true);
+      expect(await this.poem.connect(this.signers.admin).supportsInterface(0x80ac58cd)).equals(true);
+      expect(await this.poem.connect(this.signers.admin).supportsInterface(0x5b5e139f)).equals(true);
+      expect(await this.poem.connect(this.signers.admin).supportsInterface(0x1111119f)).equals(false);
+    });
+  });
+
   describe("Poem withdraw", function () {
-    it("only allows owner to withdraw");
-    it("allows owner to withdraw ETH");
+    it("if non-owner withdraws, it'll go to the owner's address", async function () {
+      let tipAmount = BigNumber.from(1000000000000000);
+      const donorBalance = await this.signers.others[0].getBalance();
+      const ownerBalance = await this.signers.admin.getBalance();
+      await this.poem.connect(this.signers.others[0]).tipTheCreator({ value: tipAmount });
+
+      const donorAfterBalance = await this.signers.others[0].getBalance();
+      const ownerAfterBalance = await this.signers.admin.getBalance();
+      expect(donorAfterBalance).to.lessThanOrEqual(donorBalance.sub(tipAmount));
+      expect(ownerAfterBalance).to.equal(ownerBalance);
+
+      await this.poem.connect(this.signers.others[1]).withdrawAllEth();
+      const donorAfterWithdrawBalance = await this.signers.others[0].getBalance();
+      const ownerAfterWithdrawBalance = await this.signers.admin.getBalance();
+      expect(donorAfterBalance).to.equal(donorAfterWithdrawBalance);
+      expect(ownerAfterWithdrawBalance).to.equal(ownerBalance.add(tipAmount));
+    });
+
+    it("if owner withdraws, it'll go to the owner's address", async function () {
+      let tipAmount = BigNumber.from(1000000000000000);
+      const donorBalance = await this.signers.others[0].getBalance();
+      const ownerBalance = await this.signers.admin.getBalance();
+      await this.poem.connect(this.signers.admin).tipTheCreator({ value: tipAmount });
+
+      const donorAfterBalance = await this.signers.others[0].getBalance();
+      const ownerAfterBalance = await this.signers.admin.getBalance();
+      expect(donorAfterBalance).to.equal(donorBalance);
+      expect(ownerAfterBalance).to.lessThanOrEqual(ownerBalance.sub(tipAmount));
+
+      await this.poem.connect(this.signers.admin).withdrawAllEth();
+      const donorAfterWithdrawBalance = await this.signers.others[0].getBalance();
+      const ownerAfterWithdrawBalance = await this.signers.admin.getBalance();
+      expect(donorAfterBalance).to.equal(donorAfterWithdrawBalance);
+      expect(ownerAfterWithdrawBalance).to.lessThanOrEqual(ownerBalance);
+      expect(ownerAfterBalance).to.greaterThan(ownerBalance.sub(tipAmount).sub(tipAmount.div(4)));
+    });
+
     it("allows owner to withdraw random ERC20 tokens");
-    it("allows owner to withdraw random ERC721A tokens");
+    it("allows owner to withdraw random ERC721A tokens?");
   });
 
   describe("Poem Minting Requirements", function () {
@@ -55,6 +101,14 @@ export function shouldBehaveLikePoem(): void {
       expect(await this.poem.connect(this.signers.admin).getHistoricalInput()).to.not.equal(1);
     });
 
+    it("on mint, because updating historicalInput, emit BatchMetadataUpdate event", async function () {
+      const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
+      await this.poem.connect(this.signers.admin).mint();
+      expect(await this.poem.connect(this.signers.admin))
+        .to.emit(this.poem, "BatchMetadataUpdate")
+        .withArgs(0, maxIndex);
+    });
+
     it("on mint, update ownership", async function () {
       await this.poem.connect(this.signers.admin).mint();
       expect(await this.poem.connect(this.signers.admin).balanceOf(this.signers.admin.address)).to.equal(1);
@@ -82,6 +136,15 @@ export function shouldBehaveLikePoem(): void {
       const oldPseudoRandomNumber = await this.poem.connect(this.signers.admin).getHistoricalInput();
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
       expect(await this.poem.connect(this.signers.admin).getHistoricalInput()).to.not.equal(oldPseudoRandomNumber);
+    });
+
+    it("on transfer, because updating historicalInput, emit BatchMetadataUpdate event", async function () {
+      const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
+      await this.poem.connect(this.signers.admin).mint();
+      this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
+      expect(await this.poem.connect(this.signers.admin))
+        .to.emit(this.poem, "BatchMetadataUpdate")
+        .withArgs(0, maxIndex);
     });
 
     it("on transfer, update transfer timestamp", async function () {
@@ -142,6 +205,15 @@ export function shouldBehaveLikePoem(): void {
       expect(num).to.not.equal(1);
       await this.poem.connect(this.signers.admin).burn(0);
       expect(await this.poem.connect(this.signers.admin).getHistoricalInput()).to.not.equal(num);
+    });
+
+    it("on burn, because updating historicalInput, emit BatchMetadataUpdate event", async function () {
+      const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
+      await this.poem.connect(this.signers.admin).mint();
+      await this.poem.connect(this.signers.admin).burn(0);
+      expect(await this.poem.connect(this.signers.admin))
+        .to.emit(this.poem, "BatchMetadataUpdate")
+        .withArgs(0, maxIndex);
     });
 
     it("on burn, update currStep and path", async function () {

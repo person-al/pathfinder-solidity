@@ -5,12 +5,12 @@
 - [x] create script to generate all potential image outcomes
 - [ ] ~~see where we can save on gas~~ (I may be leaning more heavily towards features now :/)
 - [ ] ~~make royalties OpenSea compatible~~ I decided on no royalties for this project
-- [ ] ~~support contract-level metadata for OpenSea: https://docs.opensea.io/docs/contract-level-metadata~~ I'll just do it manually. If OpenSea isn't going to support the standard royalty format, why should I bother putting their desired metadata format onchain
+- [ ] ~~support contract-level metadata for OpenSea: https://docs.opensea.io/docs/contract-level-metadata~~ I'll just do it manually.
 - [x] deploy on testnet
 - [x] remove tip functionality
 - [ ] ~~make licensing clear~~ (no need, I think)
 - [x] improve README
-- [x] create website homepage (optional)
+- [x] create website homepage
 - [x] come up with a better project name
 - [x] update repo name
 - [ ] deploy on mainnet
@@ -18,6 +18,56 @@
 ## Potential modifications:
 
 - [x] Add distortion to SVG based on jitter and opacity like so: https://tympanus.net/codrops/2019/02/19/svg-filter-effects-creating-texture-with-feturbulence/
+
+## 2023-04-03
+
+## Significant changes
+
+- support BatchMetadataUpdate event to let OpenSea know when the metadata has changed
+
+## Minor changes
+
+- additional unit tests
+
+## Gas usage
+
+```
+·---------------------------------------|---------------------------|-------------|-----------------------------·
+|         Solc version: 0.8.15          ·  Optimizer enabled: true  ·  Runs: 800  ·  Block limit: 30000000 gas  │
+········································|···························|·············|······························
+|  Methods                              ·               17 gwei/gas               ·       1792.72 usd/eth       │
+·················|······················|·············|·············|·············|···············|··············
+|  Contract      ·  Method              ·  Min        ·  Max        ·  Avg        ·  # calls      ·  usd (avg)  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  burn                ·      57462  ·     101367  ·      71776  ·           70  ·       2.19  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  mint                ·      66124  ·     100324  ·      81025  ·           70  ·       2.47  │
+·················|······················|·············|·············|·············|···············|··············
+|  Poem          ·  transferFrom        ·      47275  ·      69213  ·      60219  ·          144  ·       1.84  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  burn                ·      64113  ·     101371  ·      80320  ·           34  ·       2.45  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  initialize          ·          -  ·          -  ·     434551  ·           44  ·      13.24  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  mint                ·      83281  ·     100381  ·      91004  ·           62  ·       2.77  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  packNode            ·      38824  ·      38884  ·      38861  ·           19  ·       1.18  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  setHistoricalInput  ·      29064  ·      29076  ·      29071  ·           23  ·       0.89  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  tipTheCreator       ·          -  ·          -  ·      22360  ·            2  ·       0.68  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  transferFrom        ·      52143  ·      69257  ·      56507  ·           55  ·       1.72  │
+·················|······················|·············|·············|·············|···············|··············
+|  TestablePoem  ·  withdrawAllEth      ·      30291  ·      32791  ·      31541  ·            2  ·       0.96  │
+·················|······················|·············|·············|·············|···············|··············
+|  Deployments                          ·                                         ·  % of limit   ·             │
+········································|·············|·············|·············|···············|··············
+|  Poem                                 ·          -  ·          -  ·    4509581  ·         15 %  ·     137.44  │
+········································|·············|·············|·············|···············|··············
+|  TestablePoem                         ·          -  ·          -  ·    5866391  ·       19.6 %  ·     178.79  │
+·---------------------------------------|-------------|-------------|-------------|---------------|-------------·
+```
 
 ## 2023-03-19
 

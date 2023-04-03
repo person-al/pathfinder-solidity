@@ -163,7 +163,7 @@ export function shouldBehaveLikeTestablePoem(): void {
     });
 
     // To be used when generating numbers to deploy contract with
-    it("initializes and prints", async function () {
+    it.skip("initializes and prints", async function () {
       await this.poem.connect(this.signers.admin).initialize();
       expect(await this.poem.connect(this.signers.admin).getValueString(1)).to.equal("As he ");
       console.log(await this.poem.connect(this.signers.admin).getNodes());

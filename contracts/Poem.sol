@@ -5,6 +5,7 @@ import "erc721a/contracts/ERC721A.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "./Renderable.sol";
+import "./IERC4906.sol";
 
 /// Index should be > 0 and <= MAX_INDEX_VAL
 error InvalidIndexMin1Max25();
@@ -13,7 +14,7 @@ error OutOfTokens();
 error YouCanOnlyMint1Token();
 error OneCanHoldMax3Tokens(address to);
 
-contract Poem is ERC721A, Ownable, RenderableMetadata {
+contract Poem is ERC721A, Ownable, RenderableMetadata, IERC4906 {
     uint8 internal constant MAX_NUM_JITTERS = 3;
     uint8 internal constant MAX_INDEX_VAL = 25;
 
@@ -93,6 +94,11 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
 
     // ========= PUBLIC FUNCTIONS =========
     // mint, burn, tokenURI, SVG
+
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return (interfaceId == bytes4(0x49064906) || // ERC4906
+            super.supportsInterface(interfaceId));
+    }
 
     function totalMinted() external view returns (uint256) {
         return _totalMinted();
@@ -196,6 +202,11 @@ contract Poem is ERC721A, Ownable, RenderableMetadata {
             block.difficulty,
             block.number
         );
+        // tokenId is 0-indexed so the last ID we'll have is 6
+        // The standard recommends not emitting this when a token is minted or burned
+        //      But in our case, a token getting minted/burned updates all other tokens' metadata
+        //      It's not worth emitting BatchMetadataUpdate twice to meet the recommendation imo.
+        emit BatchMetadataUpdate(0, MAX_NUM_NFTS - 1);
         if (to != address(0)) {
             // If it's not being burned, store transfer timestamp
             //      Because we only have 64 bits, we can't store the full block number.
