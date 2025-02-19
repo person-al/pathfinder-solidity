@@ -1,6 +1,8 @@
 import fs from "fs";
 import { ethers } from "hardhat";
 
+import { lastCheck } from "../../last_check";
+
 const myConsole = new console.Console(
   fs.createWriteStream("/home/madeeha/code/person/solidity-sandbox/logs.txt", { flags: "a" }),
 );
