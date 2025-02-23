@@ -15,7 +15,7 @@ export function shouldBehaveLikePoem(): void {
 
   describe("Poem withdraw", function () {
     it("if non-owner withdraws, it'll go to the owner's address", async function () {
-      let tipAmount = BigNumber.from(1000000000000000);
+      const tipAmount = BigNumber.from(1000000000000000);
       const donorBalance = await this.signers.others[0].getBalance();
       const ownerBalance = await this.signers.admin.getBalance();
       await this.poem.connect(this.signers.others[0]).tipTheCreator({ value: tipAmount });
@@ -33,7 +33,7 @@ export function shouldBehaveLikePoem(): void {
     });
 
     it("if owner withdraws, it'll go to the owner's address", async function () {
-      let tipAmount = BigNumber.from(1000000000000000);
+      const tipAmount = BigNumber.from(1000000000000000);
       const donorBalance = await this.signers.others[0].getBalance();
       const ownerBalance = await this.signers.admin.getBalance();
       await this.poem.connect(this.signers.admin).tipTheCreator({ value: tipAmount });
@@ -104,6 +104,7 @@ export function shouldBehaveLikePoem(): void {
     it("on mint, because updating historicalInput, emit BatchMetadataUpdate event", async function () {
       const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
       await this.poem.connect(this.signers.admin).mint();
+      // eslint-disable-next-line
       expect(await this.poem.connect(this.signers.admin))
         .to.emit(this.poem, "BatchMetadataUpdate")
         .withArgs(0, maxIndex);
@@ -142,6 +143,7 @@ export function shouldBehaveLikePoem(): void {
       const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
       await this.poem.connect(this.signers.admin).mint();
       this.poem.connect(this.signers.admin).transferFrom(this.signers.admin.address, this.signers.user.address, 0);
+      // eslint-disable-next-line
       expect(await this.poem.connect(this.signers.admin))
         .to.emit(this.poem, "BatchMetadataUpdate")
         .withArgs(0, maxIndex);
@@ -211,6 +213,7 @@ export function shouldBehaveLikePoem(): void {
       const maxIndex = (await this.poem.connect(this.signers.admin).MAX_NUM_NFTS()) - 1;
       await this.poem.connect(this.signers.admin).mint();
       await this.poem.connect(this.signers.admin).burn(0);
+      // eslint-disable-next-line
       expect(await this.poem.connect(this.signers.admin))
         .to.emit(this.poem, "BatchMetadataUpdate")
         .withArgs(0, maxIndex);

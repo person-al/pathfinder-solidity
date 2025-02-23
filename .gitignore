@@ -26,4 +26,6 @@ yarn-debug.log*
 yarn-error.log*
 deployed.txt
 deploy_bash.sh
+deploy_testnet_bash.sh
 logs.txt
+logs_sepolia.txt

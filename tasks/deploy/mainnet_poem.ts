@@ -1,8 +1,6 @@
 import fs from "fs";
 import { ethers } from "hardhat";
 
-import { lastCheck } from "../../last_check";
-
 const myConsole = new console.Console(
   fs.createWriteStream("/home/madeeha/code/person/solidity-sandbox/logs.txt", { flags: "a" }),
 );
@@ -37,10 +35,10 @@ function writeAddress(addr: string) {
 }
 
 async function checkGas(): Promise<EtherscanResult> {
-  let response = await fetch(
+  const response = await fetch(
     `https://api.etherscan.io/api?module=gastracker&action=gasoracle&apikey=${process.env.ETHERSCAN_API_KEY}`,
   );
-  let data: EtherscanResult = (await response.json()) as EtherscanResult;
+  const data: EtherscanResult = (await response.json()) as EtherscanResult;
   return data;
 }
 // 4485369 gas used -> gasPrice * gas used = gwei cost / 1000000000 = eth cost
